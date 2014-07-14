@@ -5,6 +5,8 @@ from unittest import TestCase, main
 
 from b3j0f.utils.path import resolve_path, get_path
 
+from inspect import getmodule
+
 
 def _test():
     pass
@@ -18,7 +20,7 @@ class UtilsTest(TestCase):
     def test_resolve_element(self):
 
         # resolve builtin function
-        _open = resolve_path('__builtin__.open')
+        _open = resolve_path('%s.open' % open.__module__)
 
         self.assertTrue(_open is open)
 
@@ -47,7 +49,7 @@ class UtilsTest(TestCase):
 
         open_path = get_path(open)
 
-        self.assertEqual(open_path, '__builtin__.open')
+        self.assertEqual(open_path, '%s.open' % open.__module__)
 
         self.assertEqual(
             get_path(UtilsTest), 'b3j0f.utils.test.path.UtilsTest')
