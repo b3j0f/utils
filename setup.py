@@ -26,7 +26,7 @@ setup(
     author_email="mrb3j0f@gmail.com",
     description="b3j0f utils",
     long_description=desc,
-    url='https://github.com/mrbozzo/b3j0f.utils/',
+    url='https://github.com/mrbozzo/utils/',
     license='MIT License',
     classifiers=[
         "Development Status :: 1 - Planning",
