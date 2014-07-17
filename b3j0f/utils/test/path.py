@@ -5,8 +5,6 @@ from unittest import TestCase, main
 
 from b3j0f.utils.path import resolve_path, get_path
 
-from inspect import getmodule
-
 
 def _test():
     pass

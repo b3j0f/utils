@@ -4,14 +4,16 @@
 # ensure str are unicodes
 from __future__ import unicode_literals
 
-from inspect import ismodule
+from inspect import ismodule, currentframe
+
+from importlib import import_module
 
 
 def resolve_path(path):
     """
     Get element reference from input full path element.
 
-    :limitations: does not resolve class methods or relative path or with
+    :limitations: it does not resolve class methods or relative path or with
     wildcard.
 
     :param path: full path to a python element.
@@ -27,37 +29,51 @@ def resolve_path(path):
 
     result = None
 
-    if len(path) > 0:
+    if path:
 
         components = path.split('.')
+        index = 0
+        components_len = len(components)
 
         module_name = components[0]
 
         # try to import the first component name
         try:
-            result = __import__(module_name)
+            result = import_module(module_name)
         except ImportError:
             pass
 
         if result is not None:
 
-            # try to import all sub-modules/packages
-            if len(components) > 1:
+            if components_len > 1:
 
+                index = 1
+
+                # try to import all sub-modules/packages
                 try:  # check if name is defined from an external module
                     # find the right module
 
-                    for index in range(1, len(components)):
+                    while index < components_len:
                         module_name = '%s.%s' % (
                             module_name, components[index])
-                        result = __import__(module_name)
+                        result = import_module(module_name)
+                        index += 1
 
                 except ImportError:
-                    pass
+                    # path sub-module content
+                    try:
 
-            # path its content
-            for comp in components[1:]:
-                result = getattr(result, comp)
+                        while index < components_len:
+                            result = getattr(result, components[index])
+                            index += 1
+
+                    except AttributeError:
+                        raise Exception(
+                            'Wrong path %s at %s' % (path, components[:index]))
+
+        else:  # get relative object from current module
+
+            raise Exception('Does not handle relative path')
 
     return result
 
