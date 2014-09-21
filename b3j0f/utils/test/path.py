@@ -27,10 +27,10 @@ class UtilsTest(TestCase):
 
         self.assertTrue(utilsTest is UtilsTest)
 
-        # do not resolve method
+        # resolve method
         setUp = lookup('b3j0f.utils.test.path.UtilsTest.setUp')
 
-        self.assertFalse(setUp is UtilsTest.setUp)
+        self.assertTrue(setUp == UtilsTest.setUp)
 
         # resolve function
         test = lookup('b3j0f.utils.test.path._test')
