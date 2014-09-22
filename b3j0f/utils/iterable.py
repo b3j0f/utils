@@ -52,8 +52,16 @@ def first(iterable, default=None):
 
     :param Iterable iterable: iterable to iterate on.
     :param default: default value to get if input iterable is empty.
+    :raises TypeError: if iterable is not an iterable value
     """
 
-    result = iterable[0] if iterable else default
+    # start to get the iterable iterator (raises TypeError if iter)
+    iterator = iter(iterable)
+    # get first element
+    try:
+        result = iterator.next()
+    except StopIteration:
+        # if no element exist, result equals default
+        result = default
 
     return result

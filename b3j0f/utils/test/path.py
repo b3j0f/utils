@@ -6,10 +6,6 @@ from unittest import TestCase, main
 from b3j0f.utils.path import lookup, clearcache, incache, getpath
 
 
-def _test():
-    pass
-
-
 class LookUpTest(TestCase):
 
     def setUp(self):
@@ -88,15 +84,20 @@ class LookUpTest(TestCase):
         Test lookup cache
         """
 
+        # check if cache is empty
         path = 'b3j0f'
         self.assertFalse(incache(path))
+        # check if element is saved in the cache
         lookup(path, cache=True)
         self.assertTrue(incache(path))
+        # check if clear cache works
         clearcache(path)
         self.assertFalse(incache(path))
+        # check if clear all cache works
         lookup(path, cache=True)
         clearcache()
         self.assertFalse(incache(path))
+        # check if element is not saved in the cache
         lookup(path, cache=False)
         self.assertFalse(incache(path))
 
