@@ -21,7 +21,7 @@ with open(join(_path, 'README')) as f:
 setup(
     name=package.__name__,
     version=package.__version__,
-    packages=find_packages(where=_path, exclude=['*.test']),
+    packages=find_packages(where=_path, exclude=['test.*', '*.test.*']),
     package_dir={'': _path},
     author="b3j0f",
     author_email="mrb3j0f@gmail.com",

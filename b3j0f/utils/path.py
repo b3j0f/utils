@@ -20,10 +20,23 @@ def clearcache(path=None):
     :param str path: element path to remove from cache. If None clear all cache
     """
 
+    global __LOOKUP_CACHE
+
     if path is None:
         __LOOKUP_CACHE = {}
     else:
         __LOOKUP_CACHE.pop(path, None)
+
+
+def incache(path):
+    """
+    :return: True if path is in cache
+    :rtype: bool
+    """
+
+    global __LOOKUP_CACHE
+
+    return path in __LOOKUP_CACHE
 
 
 def lookup(path, cache=True):
