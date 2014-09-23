@@ -59,7 +59,7 @@ def first(iterable, default=None):
     iterator = iter(iterable)
     # get first element
     try:
-        result = iterator.next()
+        result = next(iterator)
     except StopIteration:
         # if no element exist, result equals default
         result = default
