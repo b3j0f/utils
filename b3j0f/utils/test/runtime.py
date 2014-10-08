@@ -3,7 +3,7 @@
 
 from unittest import TestCase, main
 
-from b3j0f.utils.decorator import make_constants, bind_all
+from b3j0f.utils.runtime import make_constants, bind_all
 
 import random
 
