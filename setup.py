@@ -15,7 +15,7 @@ path.append(_path)
 import b3j0f.utils as package
 
 # get long description
-with open(join(_path, 'README.rst')) as f:
+with open(join(_path, 'README')) as f:
     desc = f.read()
 
 setup(
