@@ -24,9 +24,10 @@ setup(
     packages=find_packages(where=_path, exclude=['test.*', '*.test.*']),
     package_dir={'': _path},
     author="b3j0f",
-    author_email="mrb3j0f@gmail.com",
+    author_email="jlabejof@yahoo.fr",
     description="b3j0f utils",
     long_description=desc,
+    include_package_data=True,
     url='https://github.com/mrbozzo/utils/',
     license='MIT License',
     classifiers=[
@@ -35,7 +36,6 @@ setup(
         "Natural Language :: French",
         "Operating System :: OS Independent",
         "Programming Language :: Python",
-        "Topic :: Communications",
     ],
     test_suite='b3j0f'
 )

@@ -7,15 +7,9 @@ Utils: utility functions in b3j0f projects
 .. moduleauthor:: b3j0f <jlabejof@yahoo.fr>
 .. sectionauthor:: b3j0f <jlabejof@yahoo.fr>
 
-Common function useful in b3j0f projects
+Common function useful in b3j0f projects.
 
-Indices and tables
-------------------
+Installation
+------------
 
-* :ref:`genindex`
-* :ref:`search`
-* iterable
-* path
-* runtime
-* ut
-* version
+pip install b3j0f.utils
