@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from unittest import TestCase, main
+from unittest import main
 
+from b3j0f.utils.ut import UTCase
 from b3j0f.utils.iterable import first, ensureiterable, isiterable
+from b3j0f.utils.version import basestring
 
 
-class EnsureIterableTest(TestCase):
+class EnsureIterableTest(UTCase):
 
     def test_list(self):
 
@@ -24,11 +26,11 @@ class EnsureIterableTest(TestCase):
     def test_notallowed(self):
 
         l = ""
-        iterable = ensureiterable(l, notallowed=str)
+        iterable = ensureiterable(l, notallowed=basestring)
         self.assertTrue(iterable)
 
 
-class IsIterable(TestCase):
+class IsIterable(UTCase):
 
     def test_iterable(self):
         """
@@ -49,7 +51,7 @@ class IsIterable(TestCase):
         Test iterable with a tuple of notallowed types
         """
 
-        self.assertFalse(isiterable([], notallowed=(list, str)))
+        self.assertFalse(isiterable([], notallowed=(list, basestring)))
 
     def test_not_iterable(self):
         """
@@ -59,7 +61,7 @@ class IsIterable(TestCase):
         self.assertFalse(isiterable(None))
 
 
-class First(TestCase):
+class First(UTCase):
 
     def test_empty(self):
         """

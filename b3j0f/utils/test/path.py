@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from unittest import TestCase, main
+from unittest import main
 
+from b3j0f.utils.ut import UTCase
 from b3j0f.utils.path import lookup, clearcache, incache, getpath
 
 
-class LookUpTest(TestCase):
+class LookUpTest(UTCase):
 
     def setUp(self):
         pass
@@ -102,7 +103,7 @@ class LookUpTest(TestCase):
         self.assertFalse(incache(path))
 
 
-class GetPathTest(TestCase):
+class GetPathTest(UTCase):
 
     def test_builtin(self):
         """
@@ -121,7 +122,7 @@ class GetPathTest(TestCase):
         self.assertEqual(cls_path, 'b3j0f.utils.test.path.GetPathTest')
 
 
-class LookUpGetPathTest(TestCase):
+class LookUpGetPathTest(UTCase):
 
     def test_lookup_getpath(self):
         """

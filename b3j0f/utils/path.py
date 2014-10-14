@@ -5,9 +5,14 @@ from __future__ import unicode_literals
 
 from inspect import ismodule, currentframe
 
-from importlib import import_module
+try:
+    from importlib import import_module
+except ImportError:
+    import_module = __import__
 
 from random import random
+
+from b3j0f.utils.version import PY26
 
 #: lookup cache
 __LOOKUP_CACHE = {}
@@ -106,29 +111,41 @@ def lookup(path, cache=True):
                     # find the right module
 
                     while index < components_len:
-                        module_name = '%s.%s' % (
-                            module_name, components[index])
+                        module_name = '{0}.{1}'.format(
+                            module_name, components[index]
+                        )
                         result = import_module(module_name)
                         index += 1
 
                 except ImportError:
                     # path sub-module content
                     try:
-
+                        if PY26:  # when __import__ is used
+                            index = 1  # restart count of pathing
                         while index < components_len:
                             result = getattr(result, components[index])
                             index += 1
 
                     except AttributeError:
                         raise ImportError(
-                            'Wrong path %s at %s' % (path, components[:index]))
+                            'Wrong path {0} at {1}'.format(
+                                path, components[:index]
+                            )
+                        )
+                else:  # in case of PY26
+
+                    if PY26:
+                        index = 1
+                        while index < components_len:
+                            result = getattr(result, components[index])
+                            index += 1
 
             # save in cache if found
             if cache:
                 __LOOKUP_CACHE[path] = result
 
     if not found:
-        raise ImportError('Wrong path %s' % path)
+        raise ImportError('Wrong path {0}'.format(path))
 
     return result
 
@@ -149,9 +166,10 @@ def getpath(element):
 
     if not hasattr(element, '__name__'):
         raise AttributeError(
-            'element %s must have the attribute __name__' % element)
+            'element {0} must have the attribute __name__'.format(element)
+        )
 
     result = element.__name__ if ismodule(element) else \
-        '%s.%s' % (element.__module__, element.__name__)
+        '{0}.{1}'.format(element.__module__, element.__name__)
 
     return result

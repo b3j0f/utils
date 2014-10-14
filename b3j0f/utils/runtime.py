@@ -17,7 +17,18 @@ Modify verbose argument which is None or use a function with one argument which
 
 from opcode import opmap, HAVE_ARGUMENT, EXTENDED_ARG
 
-from types import FunctionType, ClassType
+from types import FunctionType, ModuleType
+try:
+    from types import ClassType
+except ImportError:
+    ClassType = type
+
+from b3j0f.utils.version import PY3
+
+try:
+    import __builtin__
+except ImportError:
+    import builtins as __builtin__
 
 STORE_GLOBAL = opmap['STORE_GLOBAL']
 LOAD_GLOBAL = opmap['LOAD_GLOBAL']
@@ -28,24 +39,27 @@ JUMP_FORWARD = opmap['JUMP_FORWARD']
 
 
 def _make_constants(f, builtin_only=False, stoplist=[], verbose=None):
+
+    result = f
+
     try:
-        co = f.func_code
+        co = f.__code__
     except AttributeError:
-        return f        # Jython doesn't have a func_code attribute.
-    newcode = map(ord, co.co_code)
+        return f        # Jython doesn't have a __code__ attribute.
+    newcode = list(co.co_code) if PY3 else map(ord, co.co_code)
     newconsts = list(co.co_consts)
     names = co.co_names
     codelen = len(newcode)
 
-    import __builtin__
     env = vars(__builtin__).copy()
     if builtin_only:
         stoplist = dict.fromkeys(stoplist)
-        stoplist.update(f.func_globals)
+        stoplist.update(f.__globals__)
     else:
-        env.update(f.func_globals)
+        env.update(f.__globals__)
 
     # First pass converts global lookups into constants
+    changed = False
     i = 0
     while i < codelen:
         opcode = newcode[i]
@@ -65,6 +79,7 @@ def _make_constants(f, builtin_only=False, stoplist=[], verbose=None):
                 newcode[i] = LOAD_CONST
                 newcode[i + 1] = pos & 0xFF
                 newcode[i + 2] = pos >> 8
+                changed = True
                 if verbose is not None:
                     verbose("{0} --> {1}".format(name, value))
         i += 1
@@ -119,17 +134,28 @@ def _make_constants(f, builtin_only=False, stoplist=[], verbose=None):
         newcode[i + 1] = n & 0xFF
         newcode[i + 2] = n >> 8
         i += 3
+        changed = True
         if verbose is not None:
             verbose("new folded constant:{0}".format(value))
 
-    codestr = ''.join(map(chr, newcode))
-    codeobj = type(co)(co.co_argcount, co.co_nlocals, co.co_stacksize,
-                    co.co_flags, codestr, tuple(newconsts), co.co_names,
-                    co.co_varnames, co.co_filename, co.co_name,
-                    co.co_firstlineno, co.co_lnotab, co.co_freevars,
-                    co.co_cellvars)
-    return type(f)(codeobj, f.func_globals, f.func_name, f.func_defaults,
-                f.func_closure)
+    if changed:
+
+        codestr = bytes(newcode) if PY3 else ''.join(map(chr, newcode))
+        vargs = [
+            co.co_argcount, co.co_nlocals, co.co_stacksize,
+            co.co_flags, codestr, tuple(newconsts), co.co_names,
+            co.co_varnames, co.co_filename, co.co_name,
+            co.co_firstlineno, co.co_lnotab, co.co_freevars,
+            co.co_cellvars
+        ]
+        if PY3:
+            vargs.insert(1, co.co_kwonlyargcount)
+
+        codeobj = type(co)(*vargs)
+        result = type(f)(codeobj, f.__globals__, f.__name__, f.__defaults__,
+                    f.__closure__)
+
+    return result
 
 _make_constants = _make_constants(_make_constants)  # optimize thyself!
 
@@ -142,6 +168,28 @@ def bind_all(mc, builtin_only=False, stoplist=[], verbose=None):
     builtin_only to True.
 
     """
+
+    def _bind_all(mc, builtin_only=False, stoplist=[], verbose=False):
+
+        if isinstance(mc, (ModuleType, type)):
+            for k, v in list(vars(mc).items()):
+                if type(v) is FunctionType:
+                    newv = _make_constants(v, builtin_only, stoplist,  verbose)
+                    setattr(mc, k, newv)
+                elif isinstance(v, type):
+                    _bind_all(v, builtin_only, stoplist, verbose)
+
+    if isinstance(mc, dict):  # allow: bind_all(globals())
+        for k, v in list(mc.items()):
+            if type(v) is FunctionType:
+                newv = _make_constants(v, builtin_only, stoplist,  verbose)
+                mc[k] = newv
+            elif isinstance(v, type):
+                _bind_all(v, builtin_only, stoplist, verbose)
+    else:
+        _bind_all(mc, builtin_only, stoplist, verbose)
+
+    """
     try:
         d = vars(mc)
     except TypeError:
@@ -152,6 +200,7 @@ def bind_all(mc, builtin_only=False, stoplist=[], verbose=None):
             setattr(mc, k, newv)
         elif type(v) in (type, ClassType):
             bind_all(v, builtin_only, stoplist, verbose)
+    """
 
 
 @_make_constants
