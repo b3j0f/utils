@@ -19,18 +19,46 @@ to set any attribute on any elements.
 
 When you are looking for an element bound property, the result is a dictionary
 of the shape {element, {property name, property}}.
+
+.. warning:
+
+    - None methods can not be bound to properties.
+    - It is adviced to delete properties from cache after deleting them at
+        runtime in order to avoid memory leak.
 """
 
-from inspect import ismethod
+from b3j0f.utils.version import PY26
 
+if PY26:  # import OrderedDict for python2.6 form ordereddict
+    from ordereddict import OrderedDict
+else:  # in other cases, import OrderedDict from collections
+    from collections import OrderedDict
+
+from inspect import ismethod
 
 __B3J0F__PROPERTIES__ = '__b3j0f_props'  #: __dict__ properties key
 
 __DICT__ = '__dict__'  #: __dict__ elt attribute name
+__CLASS__ = '__class__'  #: __class__ elt attribute name
 __SELF__ = '__self__'  #: __self__ class instance attribute name
 __BASES__ = '__bases__'  # __bases__ class attribute name
 
-__STATIC__DICTS__ = {}  #: dictionary of properties for static objects
+__STATIC_ELEMENTS_CACHE__ = {}  #: dictionary of properties for static objects
+
+
+def free_cache(*elts):
+    """
+    Free properties bound to input cached elts. If empty, free the whole cache.
+    """
+
+    global __STATIC_ELEMENTS_CACHE__
+
+    for elt in elts:
+        if elt in __STATIC_ELEMENTS_CACHE__:
+            del __STATIC_ELEMENTS_CACHE__[elt]
+
+    if not elts:
+        __STATIC_ELEMENTS_CACHE__ = {}
 
 
 def _get_property_component(elt):
@@ -38,7 +66,7 @@ def _get_property_component(elt):
     Get property component which could embed properties
 
     :return: dictionary of property by name embedded into elt __dict__ or in
-        shared __STATIC__DICTS__
+        shared __STATIC_ELEMENTS_CACHE__
     :rtype: dict
 
     .. limitations::
@@ -51,35 +79,69 @@ def _get_property_component(elt):
     if hasattr(elt, __DICT__) and isinstance(elt.__dict__, dict):
         result = elt.__dict__.setdefault(__B3J0F__PROPERTIES__, {})
     else:
-        result = __STATIC__DICTS__.setdefault(elt, {})
+        result = __STATIC_ELEMENTS_CACHE__.setdefault(elt, {})
 
     return result
 
 
 def get_properties(elt, *keys):
     """
-    Get elt properties related to input keys where keys are property elts and
-        values are property values if keys is None, or dict of property
-        name, value if keys is None.
+    Get elt properties.
 
     :param elt: element form where get properties.
     :param keys: keys of properties to get from elt.
 
-    :return: dict of properties.
+    :return: dict of properties by elt and name.
     :rtype: dict
 
     .. limitations::
         Do not work on None methods
     """
 
-    result = _get_properties(elt, keys, None)
+    result = _get_properties(elt, keys)
 
     return result
 
 
-def _get_properties(elt, keys, _visited_elts):
+def get_local_properties(elt, *keys):
+    """
+    Get local elt properties (not defined in elt type or base classes).
 
-    result = {}
+    :param elt: element form where get properties.
+    :param keys: keys of properties to get from elt.
+
+    :return: dict of properties by name.
+    :rtype: dict
+
+    .. limitations::
+        Do not work on None methods
+    """
+    result = _get_properties(elt, keys, inherited=False)
+
+    return result
+
+
+def _get_properties(elt, keys, inherited=True, _visited_elts=None):
+    """
+    Get a dictionary of elt properties.
+
+    :param elt: element form where get properties.
+    :param keys: keys of properties to get from elt.
+    :param set _visited_elts: set of visited elements in order too avoid to get
+        properties twice from the same element.
+    :param bool inherited: if True, get properties from bases classes and type
+        as well.
+
+    :return: dict of properties:
+        - if inherited: {elt, {name, value}}
+        - if not inherited: {name, value}
+    :rtype: dict
+
+    .. limitations::
+        Do not work on None methods
+    """
+
+    result = OrderedDict()
 
     # save visited elts in order to not call this twice on the same elt
     if _visited_elts is None:
@@ -87,59 +149,66 @@ def _get_properties(elt, keys, _visited_elts):
 
     _visited_elts.add(elt)
 
+    # get property_component_owner such as elt by default
+    property_component_owner = elt
+
     # get bound method properties and put them with instance such as keys
-    if ismethod(elt) and hasattr(elt, __SELF__):
-        instance = elt.__self__
-        if instance is not None:  # do not manage None methods
-            # get instance property component
-            property_component = _get_property_component(instance)
-            if elt in property_component:
-                # instance properties are at instance property component elt
-                instance_properties = property_component[elt]
-                if instance not in result:
-                    result[elt] = {}
-                for key in keys:  # get properties from keys
-                    result[elt][key] = instance_properties[key]
-                else:  # get all properties whatever names
-                    if not keys:
-                        result[elt] = instance_properties.copy()
+    if ismethod(elt) and elt.__self__ is not None:
+        property_component_owner = elt.__self__
 
-            # set elt to class method
+    # get property component
+    property_component = _get_property_component(property_component_owner)
+
+    # if elt exists in property component
+    if elt in property_component:
+        properties = property_component[elt]
+        result[elt] = OrderedDict()
+        for key in keys:
+            result[elt][key] = properties[key]
+        if not keys:
+            result[elt] = properties.copy()
+
+    # if inherited, get properties from
+    if inherited:
+
+        # class
+        if hasattr(elt, __CLASS__):
+            elt_class = elt.__class__
+            if elt_class not in _visited_elts:
+                elt_class_properties = _get_properties(
+                    elt_class, keys, inherited, _visited_elts
+                )
+                result.update(elt_class_properties)
+
+        # base method if elt is a method
+        if ismethod(elt) and elt.__self__ is not None:
+            instance_class = property_component_owner.__class__
             elt_name = elt.__name__
-            instance_class = type(instance)
-            elt = getattr(instance_class, elt_name)
+            method = getattr(instance_class, elt_name)
+            method_properties = _get_properties(
+                method, keys, inherited, _visited_elts
+            )
+            result.update(method_properties)
 
-    # get elt properties
-    property_component = _get_property_component(elt)
+        # bases classes
+        if hasattr(elt, __BASES__):
+            for base in elt.__bases__:
+                if base not in _visited_elts:
+                    base_result = _get_properties(
+                        base, keys, inherited, _visited_elts
+                    )
+                    result.update(base_result)
 
-    # parse properties
-    for owner in property_component.keys():
-        # delete all inherited properties
-        if owner != elt:
-            del property_component[owner]
-        else:
-            # fill result with properties
-            owner_properties = property_component[owner]
-            if owner not in result:
-                result[owner] = {}
-            for key in keys:  # get properties from keys
-                result[owner][key] = owner_properties[key]
-            else:  # get all properties whatever names
-                if not keys:
-                    result[owner] = owner_properties.copy()
+        # type
+        elt_type = type(elt)
+        if elt_type is not elt and elt_type not in _visited_elts:
+            elt_type_result = _get_properties(
+                elt_type, keys, inherited, _visited_elts
+            )
+            result.update(elt_type_result)
 
-    # get properties of bases classes
-    if hasattr(elt, __BASES__):
-        for base in elt.__bases__:
-            if base not in _visited_elts:
-                base_result = _get_properties(base, keys, _visited_elts)
-                result.update(base_result)
-
-    # get type properties
-    elt_type = type(elt)
-    if elt_type is not elt and elt_type not in _visited_elts:
-        elt_type_result = _get_properties(elt_type, keys, _visited_elts)
-        result.update(elt_type_result)
+    elif elt in result:  # else, result is result[elt]
+        result = result[elt]
 
     return result
 
@@ -199,6 +268,33 @@ def del_properties(elt, *keys):
         for key in keys:  # delete specific properties
             if key in properties:
                 del properties[key]
-        else:  # delete all properties
-            if not keys:
-                del property_component[elt]
+        # delete all properties
+        if not keys:
+            del property_component[elt]
+
+
+def unify(properties):
+    """
+    Transform a dictionary of {elts, {name, value}} (resulting from
+        get_properties) to a dictionary of {name, value} where names are first
+        encountered in input properties.
+
+    :param OrderedDict properties: properties to unify.
+    :return: dictionary of parameter values by names.
+    :rtype: dict
+    """
+
+    result = {}
+
+    # parse elts
+    for elt in properties:
+        # get elt properties
+        elt_properties = properties[elt]
+        # iterate on elt property names
+        for name in elt_properties:
+            # add property in result only if not already present in result
+            if name not in result:
+                value = elt_properties[name]
+                result[name] = value
+
+    return result

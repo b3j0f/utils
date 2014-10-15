@@ -18,9 +18,12 @@ import b3j0f.utils as package
 with open(join(_path, 'README')) as f:
     desc = f.read()
 
+dependencies = ['ordereddict==1.1']
+
 setup(
     name=package.__name__,
     version=package.__version__,
+    install_requires=dependencies,
     packages=find_packages(where='.', exclude=['test.*', '*.test.*']),
     author="b3j0f",
     author_email="jlabejof@yahoo.fr",
