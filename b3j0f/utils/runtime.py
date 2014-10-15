@@ -174,7 +174,7 @@ def bind_all(mc, builtin_only=False, stoplist=[], verbose=None):
         if isinstance(mc, (ModuleType, type)):
             for k, v in list(vars(mc).items()):
                 if type(v) is FunctionType:
-                    newv = _make_constants(v, builtin_only, stoplist,  verbose)
+                    newv = _make_constants(v, builtin_only, stoplist, verbose)
                     setattr(mc, k, newv)
                 elif isinstance(v, type):
                     _bind_all(v, builtin_only, stoplist, verbose)
@@ -182,7 +182,7 @@ def bind_all(mc, builtin_only=False, stoplist=[], verbose=None):
     if isinstance(mc, dict):  # allow: bind_all(globals())
         for k, v in list(mc.items()):
             if type(v) is FunctionType:
-                newv = _make_constants(v, builtin_only, stoplist,  verbose)
+                newv = _make_constants(v, builtin_only, stoplist, verbose)
                 mc[k] = newv
             elif isinstance(v, type):
                 _bind_all(v, builtin_only, stoplist, verbose)
