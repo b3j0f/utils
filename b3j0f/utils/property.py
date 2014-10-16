@@ -103,7 +103,7 @@ def get_properties(elt, *keys):
         Do not work on None methods
     """
 
-    result = _get_properties(elt, keys, inherited=True, _visited_elts=set())
+    result = _get_properties(elt, keys, local=False, forbidden=set())
 
     return result
 
@@ -120,15 +120,18 @@ def get_property(elt, key, default=None):
 
     result = default
 
-    properties = get_properties(elt, key)
+    property_elts = get_properties(elt, key)
 
-    if elt in properties:
-
-        elt_properties = properties[elt]
-
+    # parse elements in property elements
+    for property_elt in property_elts:
+        # get element properties
+        elt_properties = property_elts[property_elt]
+        # if key in element properties
         if key in elt_properties:
-
+            # set result
             result = elt_properties[key]
+            # and break the loop
+            break
 
     return result
 
@@ -147,7 +150,7 @@ def get_local_properties(elt, *keys):
         Do not work on None methods
     """
 
-    result = _get_properties(elt, keys, inherited=False, _visited_elts=set())
+    result = _get_properties(elt, keys, local=True, forbidden=set())
 
     return result
 
@@ -173,20 +176,19 @@ def get_local_property(elt, key, default=None):
     return result
 
 
-def _get_properties(elt, keys, inherited, _visited_elts):
+def _get_properties(elt, keys, local, forbidden):
     """
     Get a dictionary of elt properties.
 
     :param elt: element form where get properties.
     :param keys: keys of properties to get from elt.
-    :param bool inherited: if True, get properties from bases classes and type
+    :param bool local: if False, get properties from bases classes and type
         as well.
-    :param set _visited_elts: set of visited elements in order too avoid to get
-        properties twice from the same element.
+    :param set forbidden: elts from where not get properties.
 
     :return: dict of properties:
-        - if inherited: {elt, {name, value}}
-        - if not inherited: {name, value}
+        - if local: {name, value}
+        - if not local: {elt, {name, value}}
     :rtype: dict
 
     .. limitations::
@@ -195,7 +197,8 @@ def _get_properties(elt, keys, inherited, _visited_elts):
 
     result = OrderedDict()
 
-    _visited_elts.add(elt)
+    # add elt in forbidden in order to avoid to get elt properties twice
+    forbidden.add(elt)
 
     # get property_component_owner such as elt by default
     property_component_owner = elt
@@ -219,15 +222,15 @@ def _get_properties(elt, keys, inherited, _visited_elts):
             if not keys:
                 result[elt] = properties.copy()
 
-    # if inherited, get properties from
-    if inherited:
+    # if not local, get properties from
+    if not local:
 
         # class
         if hasattr(elt, __CLASS__):
             elt_class = elt.__class__
-            if elt_class not in _visited_elts:
+            if elt_class not in forbidden:
                 elt_class_properties = _get_properties(
-                    elt_class, keys, inherited, _visited_elts
+                    elt_class, keys, local, forbidden
                 )
                 result.update(elt_class_properties)
 
@@ -237,24 +240,24 @@ def _get_properties(elt, keys, inherited, _visited_elts):
             elt_name = elt.__name__
             method = getattr(instance_class, elt_name)
             method_properties = _get_properties(
-                method, keys, inherited, _visited_elts
+                method, keys, local, forbidden
             )
             result.update(method_properties)
 
         # bases classes
         if hasattr(elt, __BASES__):
             for base in elt.__bases__:
-                if base not in _visited_elts:
+                if base not in forbidden:
                     base_result = _get_properties(
-                        base, keys, inherited, _visited_elts
+                        base, keys, local, forbidden
                     )
                     result.update(base_result)
 
         # type
         elt_type = type(elt)
-        if elt_type is not elt and elt_type not in _visited_elts:
+        if elt_type is not elt and elt_type not in forbidden:
             elt_type_result = _get_properties(
-                elt_type, keys, inherited, _visited_elts
+                elt_type, keys, local, forbidden
             )
             result.update(elt_type_result)
 
