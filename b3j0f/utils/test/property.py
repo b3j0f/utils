@@ -244,29 +244,29 @@ class OneTest(UTCase):
 
     def test_none(self):
 
-        property = get_property(self, 'a')
+        property = get_property(self, 'a', 2)
 
-        self.assertIsNone(property)
+        self.assertEqual(property, 2)
 
     def test(self):
 
         put_properties(self, a=1)
 
-        property = get_property(self, 'a')
+        property = get_property(self, 'a', 2)
 
         self.assertEqual(property, 1)
 
     def test_none_local(self):
 
-        local_property = get_local_property(self, 'a')
+        local_property = get_local_property(self, 'a', 2)
 
-        self.assertIsNone(local_property)
+        self.assertEqual(local_property, 2)
 
     def test_local(self):
 
         put_properties(self, a=1)
 
-        local_property = get_local_property(self, 'a')
+        local_property = get_local_property(self, 'a', 2)
 
         self.assertEqual(local_property, 1)
 

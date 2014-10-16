@@ -108,12 +108,17 @@ def get_properties(elt, *keys):
     return result
 
 
-def get_property(elt, key):
+def get_property(elt, key, default=None):
     """
     Get one property related to one input key
+
+    :param elt: elt from where get property
+    :param str key: property key to get
+    :param default: default value to return if key does not exist in elt
+        properties
     """
 
-    result = None
+    result = default
 
     properties = get_properties(elt, key)
 
@@ -147,12 +152,18 @@ def get_local_properties(elt, *keys):
     return result
 
 
-def get_local_property(elt, key):
+def get_local_property(elt, key, default=None):
     """
-    Get one local property related to one input key
+    Get one local property related to one input key or default value if key is
+        not found
+
+    :param elt: elt from where get property
+    :param str key: property key to get
+    :param default: default value to return if key does not exist in elt
+        properties
     """
 
-    result = None
+    result = default
 
     local_properties = get_local_properties(elt, key)
 
