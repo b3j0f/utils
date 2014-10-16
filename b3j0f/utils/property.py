@@ -108,6 +108,26 @@ def get_properties(elt, *keys):
     return result
 
 
+def get_property(elt, key):
+    """
+    Get one property related to one input key
+    """
+
+    result = None
+
+    properties = get_properties(elt, key)
+
+    if elt in properties:
+
+        elt_properties = properties[elt]
+
+        if key in elt_properties:
+
+            result = elt_properties[key]
+
+    return result
+
+
 def get_local_properties(elt, *keys):
     """
     Get local elt properties (not defined in elt type or base classes).
@@ -123,6 +143,21 @@ def get_local_properties(elt, *keys):
     """
 
     result = _get_properties(elt, keys, inherited=False, _visited_elts=set())
+
+    return result
+
+
+def get_local_property(elt, key):
+    """
+    Get one local property related to one input key
+    """
+
+    result = None
+
+    local_properties = get_local_properties(elt, key)
+
+    if key in local_properties:
+        result = local_properties[key]
 
     return result
 
@@ -163,6 +198,7 @@ def _get_properties(elt, keys, inherited, _visited_elts):
 
     # if elt exists in property component
     if elt in property_component:
+
         properties = property_component[elt]
         if properties:
             result[elt] = OrderedDict()
