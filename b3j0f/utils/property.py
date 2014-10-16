@@ -36,6 +36,11 @@ else:  # in other cases, import OrderedDict from collections
 
 from inspect import ismethod
 
+try:
+    from threading import Timer
+except ImportError:
+    from dummy_threading import Timer
+
 __B3J0F__PROPERTIES__ = '__b3j0f_props'  #: __dict__ properties key
 
 __DICT__ = '__dict__'  #: __dict__ elt attribute name
@@ -98,7 +103,7 @@ def get_properties(elt, *keys):
         Do not work on None methods
     """
 
-    result = _get_properties(elt, keys)
+    result = _get_properties(elt, keys, inherited=True, _visited_elts=set())
 
     return result
 
@@ -116,21 +121,22 @@ def get_local_properties(elt, *keys):
     .. limitations::
         Do not work on None methods
     """
-    result = _get_properties(elt, keys, inherited=False)
+
+    result = _get_properties(elt, keys, inherited=False, _visited_elts=set())
 
     return result
 
 
-def _get_properties(elt, keys, inherited=True, _visited_elts=None):
+def _get_properties(elt, keys, inherited, _visited_elts):
     """
     Get a dictionary of elt properties.
 
     :param elt: element form where get properties.
     :param keys: keys of properties to get from elt.
-    :param set _visited_elts: set of visited elements in order too avoid to get
-        properties twice from the same element.
     :param bool inherited: if True, get properties from bases classes and type
         as well.
+    :param set _visited_elts: set of visited elements in order too avoid to get
+        properties twice from the same element.
 
     :return: dict of properties:
         - if inherited: {elt, {name, value}}
@@ -142,10 +148,6 @@ def _get_properties(elt, keys, inherited=True, _visited_elts=None):
     """
 
     result = OrderedDict()
-
-    # save visited elts in order to not call this twice on the same elt
-    if _visited_elts is None:
-        _visited_elts = set()
 
     _visited_elts.add(elt)
 
@@ -162,11 +164,13 @@ def _get_properties(elt, keys, inherited=True, _visited_elts=None):
     # if elt exists in property component
     if elt in property_component:
         properties = property_component[elt]
-        result[elt] = OrderedDict()
-        for key in keys:
-            result[elt][key] = properties[key]
-        if not keys:
-            result[elt] = properties.copy()
+        if properties:
+            result[elt] = OrderedDict()
+            for key in keys:
+                if key in properties:
+                    result[elt][key] = properties[key]
+            if not keys:
+                result[elt] = properties.copy()
 
     # if inherited, get properties from
     if inherited:
@@ -213,11 +217,12 @@ def _get_properties(elt, keys, inherited=True, _visited_elts=None):
     return result
 
 
-def put_properties(elt, **properties):
+def put_properties(elt, ttl=None, **properties):
     """
     Put properties in elt.
 
     :param elt: elt on where put property.
+    :param float ttl: If not None, property time to leave
 
     .. limitations::
         Do not work on None methods
@@ -241,6 +246,12 @@ def put_properties(elt, **properties):
         for name in properties:
             value = properties[name]
             elt_properties[name] = value
+
+        if ttl is not None:
+            args = [elt]
+            args += properties.keys()
+            timer = Timer(ttl, del_properties, args=args)
+            timer.start()
 
 
 def del_properties(elt, *keys):

@@ -18,7 +18,11 @@ import b3j0f.utils as package
 with open(join(_path, 'README')) as f:
     desc = f.read()
 
-dependencies = ['ordereddict==1.1']
+from b3j0f.utils.version import PY26
+if PY26:
+    dependencies = ['ordereddict==1.1']
+else:
+    dependencies = []
 
 setup(
     name=package.__name__,

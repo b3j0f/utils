@@ -3,6 +3,8 @@
 
 from unittest import main
 
+from time import sleep
+
 from b3j0f.utils.ut import UTCase
 from b3j0f.utils.property import (
     get_properties, put_properties, del_properties, get_local_properties,
@@ -193,6 +195,36 @@ class PropertyTest(UTCase):
         import b3j0f.utils.property
 
         self._assert_properties(b3j0f.utils.property)
+
+
+class TTLTest(UTCase):
+
+    def setUp(self):
+        pass
+
+    def test_zero(self):
+
+        put_properties(self, ttl=0, name='1')
+
+        properties = get_local_properties(self)
+
+        self.assertFalse(properties)
+
+    def test_100(self):
+
+        ttl = 0.1
+
+        put_properties(self, ttl=ttl, name='1')
+
+        properties = get_local_properties(self)
+
+        self.assertTrue(properties)
+
+        sleep(ttl + 0.2)
+
+        properties = get_local_properties(self)
+
+        self.assertFalse(properties)
 
 
 class UnifyTest(UTCase):
