@@ -214,13 +214,18 @@ def _get_properties(elt, keys, local, forbidden):
     if elt in property_component:
 
         properties = property_component[elt]
+        # if properties exist
         if properties:
+            # try to add all property values in result[elt]
             result[elt] = OrderedDict()
             for key in keys:
                 if key in properties:
                     result[elt][key] = properties[key]
             if not keys:
                 result[elt] = properties.copy()
+            # delete result[elt] if empty
+            if not result[elt]:
+                del result[elt]
 
     # if not local, get properties from
     if not local:
