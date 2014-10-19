@@ -34,6 +34,8 @@ if PY26:  # import OrderedDict for python2.6 form ordereddict
 else:  # in other cases, import OrderedDict from collections
     from collections import OrderedDict
 
+from collections import Hashable
+
 from inspect import ismethod
 
 try:
@@ -73,9 +75,9 @@ def _get_property_component(elt):
     :return: dictionary of property by name embedded into elt __dict__ or in
         shared __STATIC_ELEMENTS_CACHE__
     :rtype: dict
-
+    :raises: TypeError if elt is not managed
     .. limitations::
-        Do not work on None methods
+        Do not work on None methods and not immutable types
     """
 
     result = None
@@ -84,6 +86,11 @@ def _get_property_component(elt):
     if hasattr(elt, __DICT__) and isinstance(elt.__dict__, dict):
         result = elt.__dict__.setdefault(__B3J0F__PROPERTIES__, {})
     else:
+        try:
+            result = __STATIC_ELEMENTS_CACHE__.setdefault(elt, {})
+        except TypeError:
+            # in case of not hashable object
+            raise TypeError('elt {0} must be hashable.'.format(elt))
         result = __STATIC_ELEMENTS_CACHE__.setdefault(elt, {})
 
     return result
@@ -98,9 +105,9 @@ def get_properties(elt, *keys):
 
     :return: dict of properties by elt and name.
     :rtype: dict
-
+    :raises: TypeError if elt is not managed
     .. limitations::
-        Do not work on None methods
+        Do not work on None methods and not immutable types
     """
 
     result = _get_properties(elt, keys, local=False, exclude=set())
@@ -114,6 +121,9 @@ def get_property(elt, key):
 
     :param elt: elt from where get properties
     :param str key: property key to get
+    :raises: TypeError if elt is not managed
+    .. limitations::
+        Do not work on None methods and not immutable types
     """
 
     result = {}
@@ -140,6 +150,11 @@ def get_first_property(elt, key, default=None):
     :param str key: property key to get
     :param default: default value to return if key does not exist in elt
         properties
+
+    :raises: TypeError if elt is not managed
+
+    .. limitations::
+        Do not work on None methods and not immutable types
     """
 
     result = default
@@ -169,9 +184,10 @@ def get_local_properties(elt, *keys):
 
     :return: dict of properties by name.
     :rtype: dict
+    :raises: TypeError if elt is not managed
 
     .. limitations::
-        Do not work on None methods
+        Do not work on None methods and not immutable types
     """
 
     result = _get_properties(elt, keys, local=True, exclude=set())
@@ -188,6 +204,10 @@ def get_local_property(elt, key, default=None):
     :param str key: property key to get
     :param default: default value to return if key does not exist in elt
         properties
+    :raises: TypeError if elt is not managed
+
+    .. limitations::
+        Do not work on None methods and not immutable types
     """
 
     result = default
@@ -216,17 +236,12 @@ def _get_properties(elt, keys, local, exclude):
     :rtype: dict
 
     .. limitations::
-        Do not work on None methods
+        Do not work on None methods and not immutable types
+
+    :raises: TypeError if elt is not managed
     """
 
     result = OrderedDict()
-
-    # add elt in exclude in order to avoid to get elt properties twice
-    try:
-        exclude.add(elt)
-    except TypeError:
-        # in case of unhashable type, avoid the error
-        pass
 
     # get property_component_owner such as elt by default
     property_component_owner = elt
@@ -259,7 +274,10 @@ def _get_properties(elt, keys, local, exclude):
     # if not local, get properties from
     if not local:
 
-        # serch among bases elements
+        # add elt in exclude in order to avoid to get elt properties twice
+        exclude.add(elt)
+
+        # and search among bases elements
 
         # base method if elt is a method
         if ismethod(elt) and elt.__self__ is not None:
@@ -321,6 +339,11 @@ def put_properties(elt, ttl=None, **properties):
 
     :return: Timer if ttl is not None
     :rtype: Timer
+
+    .. limitations::
+        Do not work on None methods and not immutable types
+
+    :raises: TypeError if elt is not managed
     """
 
     result = None
@@ -361,7 +384,9 @@ def del_properties(elt, *keys):
         properties.
 
     .. limitations::
-        Do not work on None methods
+        Do not work on None methods and not immutable types
+
+    :raises: TypeError if elt is not managed
     """
 
     property_component_owner = elt
@@ -418,6 +443,11 @@ def setdefault(elt, key, default):
     :param elt: element from where get property value.
     :param str key: proprety name.
     :param default: property value to set if key no in local properties
+
+    .. limitations::
+        Do not work on None methods and not immutable types
+
+    :raises: TypeError if elt is not managed
     """
 
     property_component = _get_property_component(elt)

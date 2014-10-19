@@ -197,6 +197,18 @@ class PropertyTest(UTCase):
 
         self._assert_properties(b3j0f.utils.property)
 
+    def test_dict(self):
+
+        elt = {}
+
+        self.assertRaises(TypeError, get_properties, elt)
+
+    def test_list(self):
+
+        elt = []
+
+        self.assertRaises(TypeError, get_properties, elt)
+
 
 class TTLTest(UTCase):
 
