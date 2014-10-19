@@ -103,7 +103,7 @@ def get_properties(elt, *keys):
         Do not work on None methods
     """
 
-    result = _get_properties(elt, keys, local=False, forbidden=set())
+    result = _get_properties(elt, keys, local=False, exclude=set())
 
     return result
 
@@ -174,7 +174,7 @@ def get_local_properties(elt, *keys):
         Do not work on None methods
     """
 
-    result = _get_properties(elt, keys, local=True, forbidden=set())
+    result = _get_properties(elt, keys, local=True, exclude=set())
 
     return result
 
@@ -200,7 +200,7 @@ def get_local_property(elt, key, default=None):
     return result
 
 
-def _get_properties(elt, keys, local, forbidden):
+def _get_properties(elt, keys, local, exclude):
     """
     Get a dictionary of elt properties.
 
@@ -208,7 +208,7 @@ def _get_properties(elt, keys, local, forbidden):
     :param keys: keys of properties to get from elt.
     :param bool local: if False, get properties from bases classes and type
         as well.
-    :param set forbidden: elts from where not get properties.
+    :param set exclude: elts from where not get properties.
 
     :return: dict of properties:
         - if local: {name, value}
@@ -221,8 +221,8 @@ def _get_properties(elt, keys, local, forbidden):
 
     result = OrderedDict()
 
-    # add elt in forbidden in order to avoid to get elt properties twice
-    forbidden.add(elt)
+    # add elt in exclude in order to avoid to get elt properties twice
+    exclude.add(elt)
 
     # get property_component_owner such as elt by default
     property_component_owner = elt
@@ -263,16 +263,16 @@ def _get_properties(elt, keys, local, forbidden):
             elt_name = elt.__name__
             method = getattr(instance_class, elt_name)
             method_properties = _get_properties(
-                method, keys, local, forbidden
+                method, keys, local, exclude
             )
             result.update(method_properties)
 
         # bases classes
         if hasattr(elt, __BASES__):
             for base in elt.__bases__:
-                if base not in forbidden:
+                if base not in exclude:
                     base_result = _get_properties(
-                        base, keys, local, forbidden
+                        base, keys, local, exclude
                     )
                     result.update(base_result)
 
@@ -281,17 +281,17 @@ def _get_properties(elt, keys, local, forbidden):
         # class
         if hasattr(elt, __CLASS__):
             elt_class = elt.__class__
-            if elt_class not in forbidden:
+            if elt_class not in exclude:
                 elt_class_properties = _get_properties(
-                    elt_class, keys, local, forbidden
+                    elt_class, keys, local, exclude
                 )
                 result.update(elt_class_properties)
 
         # type
         elt_type = type(elt)
-        if elt_type is not elt and elt_type not in forbidden:
+        if elt_type is not elt and elt_type not in exclude:
             elt_type_result = _get_properties(
-                elt_type, keys, local, forbidden
+                elt_type, keys, local, exclude
             )
             result.update(elt_type_result)
 
@@ -313,7 +313,7 @@ def put_properties(elt, ttl=None, **properties):
 
     :param elt: elt on where put property
     :param number ttl: If not None, property time to leave
-    :param dict properties: properties to put in elt. elt and ttl are forbidden
+    :param dict properties: properties to put in elt. elt and ttl are exclude
 
     :return: Timer if ttl is not None
     :rtype: Timer
