@@ -222,7 +222,11 @@ def _get_properties(elt, keys, local, exclude):
     result = OrderedDict()
 
     # add elt in exclude in order to avoid to get elt properties twice
-    exclude.add(elt)
+    try:
+        exclude.add(elt)
+    except TypeError:
+        # in case of unhashable type, avoid the error
+        pass
 
     # get property_component_owner such as elt by default
     property_component_owner = elt
