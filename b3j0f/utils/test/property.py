@@ -323,7 +323,7 @@ class UnifyTest(UTCase):
             self.assertEqual(unified_properties[i], i)
 
 
-def SetDefaultTest(UTCase):
+class SetDefaultTest(UTCase):
     """
     Test setdefault function
     """

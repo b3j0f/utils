@@ -406,21 +406,24 @@ def unify(properties):
     return result
 
 
-def setdefault(target, key, default):
+def setdefault(elt, key, default):
     """
     Get a local property and create default value if local property does not
         exist.
 
-    :param target: target from where get property value.
+    :param elt: element from where get property value.
     :param str key: proprety name.
     :param default: property value to set if key no in local properties
     """
 
-    property_component = _get_property_component(target)
+    property_component = _get_property_component(elt)
 
-    if key not in property_component:
-        property_component[key] = default
+    elt_properties = property_component.setdefault(elt, {})
 
-    result = property_component[key]
+    if key not in elt_properties:
+
+        elt_properties[key] = default
+
+    result = elt_properties[key]
 
     return result
