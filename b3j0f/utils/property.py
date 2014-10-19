@@ -108,9 +108,33 @@ def get_properties(elt, *keys):
     return result
 
 
-def get_property(elt, key, default=None):
+def get_property(elt, key):
     """
-    Get one property related to one input key
+    Get properties related to one input key.
+
+    :param elt: elt from where get properties
+    :param str key: property key to get
+    """
+
+    result = {}
+
+    property_elts = get_properties(elt, key)
+
+    # parse elements in property elements
+    for property_elt in property_elts:
+        # get element properties
+        elt_properties = property_elts[property_elt]
+        # if key in element properties
+        if key in elt_properties:
+            # set result
+            result[property_elt] = elt_properties[key]
+
+    return result
+
+
+def get_first_property(elt, key, default=None):
+    """
+    Get first property related to one input key
 
     :param elt: elt from where get property
     :param str key: property key to get
@@ -212,15 +236,16 @@ def _get_properties(elt, keys, local, forbidden):
 
     # if elt exists in property component
     if elt in property_component:
-
+        # get properties
         properties = property_component[elt]
         # if properties exist
         if properties:
             # try to add all property values in result[elt]
-            result[elt] = OrderedDict()
+            result[elt] = {}
             for key in keys:
                 if key in properties:
                     result[elt][key] = properties[key]
+            # add all properties if keys is not specified
             if not keys:
                 result[elt] = properties.copy()
             # delete result[elt] if empty
@@ -230,14 +255,7 @@ def _get_properties(elt, keys, local, forbidden):
     # if not local, get properties from
     if not local:
 
-        # class
-        if hasattr(elt, __CLASS__):
-            elt_class = elt.__class__
-            if elt_class not in forbidden:
-                elt_class_properties = _get_properties(
-                    elt_class, keys, local, forbidden
-                )
-                result.update(elt_class_properties)
+        # serch among bases elements
 
         # base method if elt is a method
         if ismethod(elt) and elt.__self__ is not None:
@@ -258,6 +276,17 @@ def _get_properties(elt, keys, local, forbidden):
                     )
                     result.update(base_result)
 
+        # search among type definition
+
+        # class
+        if hasattr(elt, __CLASS__):
+            elt_class = elt.__class__
+            if elt_class not in forbidden:
+                elt_class_properties = _get_properties(
+                    elt_class, keys, local, forbidden
+                )
+                result.update(elt_class_properties)
+
         # type
         elt_type = type(elt)
         if elt_type is not elt and elt_type not in forbidden:
@@ -269,6 +298,9 @@ def _get_properties(elt, keys, local, forbidden):
     elif elt in result:  # else, result is result[elt]
         result = result[elt]
 
+    else:  # if no local property exist, return an empty dict
+        result = {}
+
     return result
 
 
@@ -276,8 +308,9 @@ def put_properties(elt, ttl=None, **properties):
     """
     Put properties in elt.
 
-    :param elt: elt on where put property.
-    :param float ttl: If not None, property time to leave
+    :param elt: elt on where put property
+    :param number ttl: If not None, property time to leave
+    :param dict properties: properties to put in elt. elt and ttl are forbidden
 
     .. limitations::
         Do not work on None methods

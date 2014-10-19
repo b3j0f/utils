@@ -8,7 +8,7 @@ from time import sleep
 from b3j0f.utils.ut import UTCase
 from b3j0f.utils.property import (
     get_properties, put_properties, del_properties, get_local_properties,
-    unify, OrderedDict, get_local_property, get_property
+    unify, OrderedDict, get_local_property, get_property, get_first_property
 )
 
 
@@ -235,26 +235,26 @@ class TTLTest(UTCase):
 
 class OneTest(UTCase):
     """
-    UT for get_local_property and get_property
+    UT for get_local_property and get_first_property
     """
 
     def tearDown(self):
 
         del_properties(self)
 
-    def test_none(self):
+    def test_first_none(self):
 
-        property = get_property(self, 'a', 2)
+        _property = get_first_property(self, 'a', 2)
 
-        self.assertEqual(property, 2)
+        self.assertEqual(_property, 2)
 
-    def test(self):
+    def test_first(self):
 
         put_properties(self, a=1)
 
-        property = get_property(self, 'a', 2)
+        _property = get_first_property(self, 'a', 2)
 
-        self.assertEqual(property, 1)
+        self.assertEqual(_property, 1)
 
     def test_none_local(self):
 
@@ -269,6 +269,20 @@ class OneTest(UTCase):
         local_property = get_local_property(self, 'a', 2)
 
         self.assertEqual(local_property, 1)
+
+    def test_none(self):
+
+        _property = get_property(self, 'a')
+
+        self.assertFalse(_property)
+
+    def test_property(self):
+
+        put_properties(self, a=1)
+
+        _property = get_property(self, 'a')
+
+        self.assertEqual(_property[self], 1)
 
 
 class UnifyTest(UTCase):
