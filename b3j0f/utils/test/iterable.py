@@ -23,10 +23,10 @@ class EnsureIterableTest(UTCase):
         self.assertTrue(isinstance(iterable, dict))
         self.assertFalse(iterable)
 
-    def test_notallowed(self):
+    def test_exclude(self):
 
         l = ""
-        iterable = ensureiterable(l, notallowed=basestring)
+        iterable = ensureiterable(l, exclude=basestring)
         self.assertTrue(iterable)
 
 
@@ -39,19 +39,19 @@ class IsIterable(UTCase):
 
         self.assertTrue(isiterable([]))
 
-    def test_notallowed(self):
+    def test_exclude(self):
         """
         Test iterable and not allowed types
         """
 
-        self.assertFalse(isiterable([], notallowed=list))
+        self.assertFalse(isiterable([], exclude=list))
 
-    def test_notalloweds(self):
+    def test_excludes(self):
         """
-        Test iterable with a tuple of notallowed types
+        Test iterable with a tuple of exclude types
         """
 
-        self.assertFalse(isiterable([], notallowed=(list, basestring)))
+        self.assertFalse(isiterable([], exclude=(list, basestring)))
 
     def test_not_iterable(self):
         """

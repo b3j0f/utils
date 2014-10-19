@@ -308,13 +308,18 @@ def put_properties(elt, ttl=None, **properties):
     """
     Put properties in elt.
 
+    .. limitations::
+        Do not work on None methods
+
     :param elt: elt on where put property
     :param number ttl: If not None, property time to leave
     :param dict properties: properties to put in elt. elt and ttl are forbidden
 
-    .. limitations::
-        Do not work on None methods
+    :return: Timer if ttl is not None
+    :rtype: Timer
     """
+
+    result = None
 
     # if there have properties to process
     if properties:
@@ -338,8 +343,10 @@ def put_properties(elt, ttl=None, **properties):
         if ttl is not None:
             args = [elt]
             args += properties.keys()
-            timer = Timer(ttl, del_properties, args=args)
-            timer.start()
+            result = Timer(ttl, del_properties, args=args)
+            result.start()
+
+    return result
 
 
 def del_properties(elt, *keys):

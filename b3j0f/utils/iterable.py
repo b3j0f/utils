@@ -3,40 +3,40 @@
 from collections import Iterable
 
 
-def isiterable(element, notallowed=None):
+def isiterable(element, exclude=None):
     """
     Check whatever or not if input element is an iterable.
 
     :param element: element to check among iterable types.
-    :param type/tuple notallowed: not allowed types in the test.
+    :param type/tuple exclude: not allowed types in the test.
 
     >>> isiterable({})
     True
-    >>> isiterable({}, notallowed=dict)
+    >>> isiterable({}, exclude=dict)
     False
-    >>> isiterable({}, notallowed=(dict,))
+    >>> isiterable({}, exclude=(dict,))
     False
     """
 
     # check for allowed type
-    allowed = notallowed is None or not isinstance(element, notallowed)
+    allowed = exclude is None or not isinstance(element, exclude)
     result = allowed and isinstance(element, Iterable)
 
     return result
 
 
-def ensureiterable(value, iterable=list, notallowed=None):
+def ensureiterable(value, iterable=list, exclude=None):
     """
     Convert a value into an iterable if it is not.
 
     :param object value: object to convert
     :param type iterable: iterable type to apply (default: list)
-    :param type/tuple notallowed: types to not convert
+    :param type/tuple exclude: types to not convert
     """
 
     result = value
 
-    if not isiterable(value, notallowed=notallowed):
+    if not isiterable(value, exclude=exclude):
         result = [value]
         result = iterable(result)
 
