@@ -404,3 +404,23 @@ def unify(properties):
                 result[name] = value
 
     return result
+
+
+def setdefault(target, key, default):
+    """
+    Get a local property and create default value if local property does not
+        exist.
+
+    :param target: target from where get property value.
+    :param str key: proprety name.
+    :param default: property value to set if key no in local properties
+    """
+
+    property_component = _get_property_component(target)
+
+    if key not in property_component:
+        property_component[key] = default
+
+    result = property_component[key]
+
+    return result

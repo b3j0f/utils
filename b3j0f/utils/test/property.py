@@ -8,7 +8,8 @@ from time import sleep
 from b3j0f.utils.ut import UTCase
 from b3j0f.utils.property import (
     get_properties, put_properties, del_properties, get_local_properties,
-    unify, OrderedDict, get_local_property, get_property, get_first_property
+    unify, OrderedDict, get_local_property, get_property, get_first_property,
+    setdefault
 )
 
 
@@ -287,9 +288,6 @@ class OneTest(UTCase):
 
 class UnifyTest(UTCase):
 
-    def setUp(self):
-        pass
-
     def test_empty(self):
 
         properties = {}
@@ -323,6 +321,42 @@ class UnifyTest(UTCase):
         self.assertEqual(len(unified_properties), count)
         for i in range(count):
             self.assertEqual(unified_properties[i], i)
+
+
+def SetDefaultTest(UTCase):
+    """
+    Test setdefault function
+    """
+
+    def setUp(self):
+
+        self.key = 'test'
+
+        self.new_value = 2
+
+    def tearDown(self):
+
+        del_properties(self)
+
+    def test_exists(self):
+        """
+        Test with an existing property
+        """
+
+        put_properties(self, **{self.key: self.new_value + 1})
+
+        value = setdefault(self, self.key, self.new_value)
+
+        self.assertNotEqual(value, self.new_value)
+
+    def test_new(self):
+        """
+        Test on a missing property
+        """
+
+        value = setdefault(self, self.key, self.new_value)
+
+        self.assertEqual(value, self.new_value)
 
 
 if __name__ == '__main__':
