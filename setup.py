@@ -8,13 +8,10 @@ from os.path import abspath, dirname, join
 from sys import version_info
 
 # get setup directory abspath
-#_path = dirname(abspath(__file__))
+_path = dirname(abspath(__file__))
 
 # get long description
-#with open(join(_path, 'README')) as f:
-#    desc = f.read()
-
-with open('README') as f:
+with open(join(_path, 'README')) as f:
     desc = f.read()
 
 if version_info[:2] == (2, 6):
@@ -24,7 +21,7 @@ else:
 
 setup(
     name="b3j0f.utils",
-    version="0.5.13",
+    version="0.6.0",
     install_requires=dependencies,
     packages=find_packages(exclude=['test.*', '*.test.*']),
     author="b3j0f",
