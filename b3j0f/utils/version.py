@@ -11,13 +11,14 @@ from sys import version_info
 from platform import python_implementation
 
 __all__ = [
-    'PY3', 'PY2', 'PY26',
+    'PY3', 'PY2', 'PY26', 'PY27',
     'PYPY', 'CPYTHON', 'JYTHON', 'IRONPYTHON', 'basestring'
 ]
 
 PY3 = version_info[0] == 3  #: python3
 PY2 = version_info[0] == 2  #: python2
 PY26 = PY2 and version_info[1] == 6  #: python2.6
+PY27 = PY2 and version_info[1] == 7  #: python2.7
 PYPY = python_implementation() == 'PyPy'  #: pypy
 CPYTHON = python_implementation() == 'CPython'  #: cpython
 JYTHON = python_implementation() == 'Jython'  #: jython

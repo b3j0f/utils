@@ -52,9 +52,17 @@ class UTCaseTest(UTCase):
         self.assertRegexpMatches('a', 'a')
         self.assertRegexpMatches('a', re_compile('a'))
 
+    def test_assertRegex(self):
+        self.assertRegex('a', 'a')
+        self.assertRegex('a', re_compile('a'))
+
     def test_assertNotRegexpMatches(self):
         self.assertNotRegexpMatches('b', 'a')
         self.assertNotRegexpMatches('a', re_compile('b'))
+
+    def test_assertNotRegex(self):
+        self.assertNotRegex('a', 'b')
+        self.assertNotRegex('a', re_compile('b'))
 
     def test_assertItemsEqual(self):
         self.assertItemsEqual([1, 2], [2, 1])

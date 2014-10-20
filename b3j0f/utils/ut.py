@@ -6,7 +6,7 @@ Unit tests tools.
 
 from unittest import TestCase
 
-from b3j0f.utils.version import PY26
+from b3j0f.utils.version import PY26, PY27, PY3
 
 from re import match
 
@@ -53,12 +53,16 @@ class UTCase(TestCase):
                         if isinstance(regexp, str) else regexp.search(text),
                     msg=msg
                 )
+            # python 3 compatibility
+            self.assertRegex = self.assertRegexpMatches
             self.assertNotRegexpMatches = lambda text, regexp, msg=None: \
                 self.assertIsNone(
                     match(regexp, text)
                         if isinstance(regexp, str) else regexp.search(text),
                     msg=msg
                 )
+            # python 3 compatibility
+            self.assertNotRegex = self.assertNotRegexpMatches
             self.assertItemsEqual = lambda actual, expected, msg=None: \
                 self.assertEqual(sorted(actual), sorted(expected), msg=msg)
 
@@ -69,5 +73,29 @@ class UTCase(TestCase):
                     if not result:
                         break
                 return result
-            self.assertDictContainsSubset = lambda expected, actual, msg=None: \
+            self.assertDictContainsSubset = lambda expected, actual, msg=None:\
+                self.assertTrue(subset(expected, actual), msg=msg)
+            self.assertCountEqual = lambda first, second, msg=None: \
+                self.assertEqual(len(first), len(second), msg=msg)
+
+        elif PY27:
+            # python 3 compatibility
+            self.assertRegex = self.assertRegexpMatches
+            self.assertNotRegex = self.assertNotRegexpMatches
+
+        elif PY3:
+            #python 2 compatibility
+            self.assertRegexpMatches = self.assertRegex
+            self.assertNotRegexpMatches = self.assertNotRegex
+            self.assertItemsEqual = lambda actual, expected, msg=None: \
+                self.assertEqual(sorted(actual), sorted(expected), msg=msg)
+
+            def subset(a, b):
+                result = True
+                for k in a:
+                    result = k in b and a[k] == b[k]
+                    if not result:
+                        break
+                return result
+            self.assertDictContainsSubset = lambda expected, actual, msg=None:\
                 self.assertTrue(subset(expected, actual), msg=msg)
