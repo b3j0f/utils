@@ -5,30 +5,28 @@ from setuptools import setup, find_packages
 
 from os.path import abspath, dirname, join
 
-from sys import path
+from sys import version_info
 
 # get setup directory abspath
-_path = dirname(abspath(__file__))
-
-# import utils
-path.append(_path)
-import b3j0f.utils as package
+#_path = dirname(abspath(__file__))
 
 # get long description
-with open(join(_path, 'README')) as f:
+#with open(join(_path, 'README')) as f:
+#    desc = f.read()
+
+with open('README') as f:
     desc = f.read()
 
-from b3j0f.utils.version import PY26
-if PY26:
+if version_info[:2] == (2, 6):
     dependencies = ['ordereddict==1.1']
 else:
     dependencies = []
 
 setup(
-    name=package.__name__,
-    version=package.__version__,
+    name="b3j0f.utils",
+    version="0.5.13",
     install_requires=dependencies,
-    packages=find_packages(where='.', exclude=['test.*', '*.test.*']),
+    packages=find_packages(exclude=['test.*', '*.test.*']),
     author="b3j0f",
     author_email="jlabejof@yahoo.fr",
     description="b3j0f utils",
