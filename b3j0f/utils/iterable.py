@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
 
+"""
+Provides tools to manage iterable types
+"""
+
+__all__ = ['isiterable', 'ensureiterable', 'first']
+
 from collections import Iterable
 
 
@@ -32,6 +38,15 @@ def ensureiterable(value, iterable=list, exclude=None):
     :param object value: object to convert
     :param type iterable: iterable type to apply (default: list)
     :param type/tuple exclude: types to not convert
+
+    >>> ensureiterable([])
+    []
+    >>> ensureiterable([], iterable=tuple)
+    ()
+    >>> ensureiterable('test', exclude=str)
+    ['test']
+    >>> ensureiterable('test')
+    ['t', 'e', 's', 't']
     """
 
     result = value
@@ -53,6 +68,13 @@ def first(iterable, default=None):
     :param Iterable iterable: iterable to iterate on.
     :param default: default value to get if input iterable is empty.
     :raises TypeError: if iterable is not an iterable value
+
+    >>> first('test')
+    't'
+    >>> first([])
+    None
+    >>> first('', default='test')
+    'test'
     """
 
     # start to get the iterable iterator (raises TypeError if iter)

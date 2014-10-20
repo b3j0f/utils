@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from unittest import TestCase, main
+from unittest import main
 
+from b3j0f.utils.ut import UTCase
 from b3j0f.utils.runtime import make_constants, bind_all
 
 import random
 
 
-class MakeConstants(TestCase):
+class MakeConstants(UTCase):
 
     def setUp(self):
         self.output = []
@@ -74,6 +75,7 @@ class MakeConstants(TestCase):
         bind_all(A, verbose=self.verbose, stoplist=self.stoplist)
 
         self._test_verbose()
+
 
 if __name__ == '__main__':
     main()

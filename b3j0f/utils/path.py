@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+"""
+Tools for managing path resolution of python objects
+"""
+
 # ensure str are unicodes
 from __future__ import unicode_literals
 
@@ -14,6 +18,8 @@ from random import random
 
 from b3j0f.utils.version import PY26
 
+__all__ = ['clearcache', 'incache', 'lookup', 'getpath']
+
 #: lookup cache
 __LOOKUP_CACHE = {}
 
@@ -23,6 +29,21 @@ def clearcache(path=None):
     Clear cache memory for input path.
 
     :param str path: element path to remove from cache. If None clear all cache
+
+    >>> incache('b3j0f.utils')
+    False
+    >>> lookup('b3j0f.utils')
+    >>> incache('b3j0f.utils')
+    True
+    >>> clearcache('b3j0f.path')
+    >>> incache('b3j0f.utils')
+    False
+    >>> lookup('b3j0f.utils')
+    >>> incache('b3j0f.utils')
+    True
+    >>> clearcache()
+    >>> incache('b3j0f.utils')
+    False
     """
 
     global __LOOKUP_CACHE

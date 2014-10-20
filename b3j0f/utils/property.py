@@ -14,6 +14,8 @@ This module can bind a named property on:
     - instance methods (except for None methods)
     - instance objects (object(), 1, None, etc).
 
+And can not bind on None methods and unhashable types such as dict or list.
+
 In preserving binding from inheritance and automatical mechanisms which prevent
 to set any attribute on any elements.
 
@@ -22,10 +24,16 @@ of the shape {element, {property name, property}}.
 
 .. warning:
 
-    - None methods can not be bound to properties.
     - It is adviced to delete properties from cache after deleting them at
         runtime in order to avoid memory leak.
 """
+
+__all__ = [
+    'get_properties', 'get_property', 'get_first_property',
+    'get_local_property', 'get_local_properties',
+    'put_properties', 'del_properties',
+    'unify', 'setdefault', 'free_cache'
+]
 
 from b3j0f.utils.version import PY26
 
@@ -33,8 +41,6 @@ if PY26:  # import OrderedDict for python2.6 form ordereddict
     from ordereddict import OrderedDict
 else:  # in other cases, import OrderedDict from collections
     from collections import OrderedDict
-
-from collections import Hashable
 
 from inspect import ismethod
 
@@ -72,12 +78,11 @@ def _get_property_component(elt):
     """
     Get property component which could embed properties
 
+    :param elt: property component elt. Not None methods or unhashable types.
     :return: dictionary of property by name embedded into elt __dict__ or in
         shared __STATIC_ELEMENTS_CACHE__
     :rtype: dict
     :raises: TypeError if elt is not managed
-    .. limitations::
-        Do not work on None methods and not immutable types
     """
 
     result = None
@@ -100,14 +105,12 @@ def get_properties(elt, *keys):
     """
     Get elt properties.
 
-    :param elt: element form where get properties.
+    :param elt: properties elt. Not None methods or unhashable types.
     :param keys: keys of properties to get from elt.
 
     :return: dict of properties by elt and name.
     :rtype: dict
     :raises: TypeError if elt is not managed
-    .. limitations::
-        Do not work on None methods and not immutable types
     """
 
     result = _get_properties(elt, keys, local=False, exclude=set())
@@ -119,11 +122,9 @@ def get_property(elt, key):
     """
     Get properties related to one input key.
 
-    :param elt: elt from where get properties
-    :param str key: property key to get
-    :raises: TypeError if elt is not managed
-    .. limitations::
-        Do not work on None methods and not immutable types
+    :param elt: property elt. Not None methods or unhashable types.
+    :param str key: property key to get.
+    :raises: TypeError if elt is not managed.
     """
 
     result = {}
@@ -146,15 +147,12 @@ def get_first_property(elt, key, default=None):
     """
     Get first property related to one input key
 
-    :param elt: elt from where get property
-    :param str key: property key to get
-    :param default: default value to return if key does not exist in elt
+    :param elt: first property elt. Not None methods or unhashable types.
+    :param str key: property key to get.
+    :param default: default value to return if key does not exist in elt.
         properties
 
-    :raises: TypeError if elt is not managed
-
-    .. limitations::
-        Do not work on None methods and not immutable types
+    :raises: TypeError if elt is not managed.
     """
 
     result = default
@@ -179,15 +177,12 @@ def get_local_properties(elt, *keys):
     """
     Get local elt properties (not defined in elt type or base classes).
 
-    :param elt: element form where get properties.
+    :param elt: local properties elt. Not None methods or unhashable types.
     :param keys: keys of properties to get from elt.
 
     :return: dict of properties by name.
     :rtype: dict
-    :raises: TypeError if elt is not managed
-
-    .. limitations::
-        Do not work on None methods and not immutable types
+    :raises: TypeError if elt is not managed.
     """
 
     result = _get_properties(elt, keys, local=True, exclude=set())
@@ -198,16 +193,13 @@ def get_local_properties(elt, *keys):
 def get_local_property(elt, key, default=None):
     """
     Get one local property related to one input key or default value if key is
-        not found
+        not found.
 
-    :param elt: elt from where get property
-    :param str key: property key to get
+    :param elt: local property elt. Not None methods or unhashable types.
+    :param str key: property key to get.
     :param default: default value to return if key does not exist in elt
-        properties
-    :raises: TypeError if elt is not managed
-
-    .. limitations::
-        Do not work on None methods and not immutable types
+        properties.
+    :raises: TypeError if elt is not managed.
     """
 
     result = default
@@ -224,21 +216,18 @@ def _get_properties(elt, keys, local, exclude):
     """
     Get a dictionary of elt properties.
 
-    :param elt: element form where get properties.
+    :param elt: properties elt. Not None methods or unhashable types.
     :param keys: keys of properties to get from elt.
     :param bool local: if False, get properties from bases classes and type
         as well.
     :param set exclude: elts from where not get properties.
 
     :return: dict of properties:
-        - if local: {name, value}
-        - if not local: {elt, {name, value}}
+        - if local: {name, value}.
+        - if not local: {elt, {name, value}}.
     :rtype: dict
 
-    .. limitations::
-        Do not work on None methods and not immutable types
-
-    :raises: TypeError if elt is not managed
+    :raises: TypeError if elt is not managed.
     """
 
     result = OrderedDict()
@@ -330,20 +319,14 @@ def put_properties(elt, ttl=None, **properties):
     """
     Put properties in elt.
 
-    .. limitations::
-        Do not work on None methods
+    :param elt: properties elt to put. Not None methods or unhashable types.
+    :param number ttl: If not None, property time to leave.
+    :param dict properties: properties to put in elt. elt and ttl are exclude.
 
-    :param elt: elt on where put property
-    :param number ttl: If not None, property time to leave
-    :param dict properties: properties to put in elt. elt and ttl are exclude
-
-    :return: Timer if ttl is not None
+    :return: Timer if ttl is not None.
     :rtype: Timer
 
-    .. limitations::
-        Do not work on None methods and not immutable types
-
-    :raises: TypeError if elt is not managed
+    :raises: TypeError if elt is not managed.
     """
 
     result = None
@@ -380,13 +363,11 @@ def del_properties(elt, *keys):
     """
     Delete elt property.
 
+    :param elt: properties elt to del. Not None methods or not hashable types.
     :param keys: property keys to delete from elt. If empty, delete all
         properties.
 
-    .. limitations::
-        Do not work on None methods and not immutable types
-
-    :raises: TypeError if elt is not managed
+    :raises: TypeError if elt is not managed.
     """
 
     property_component_owner = elt
@@ -440,14 +421,12 @@ def setdefault(elt, key, default):
     Get a local property and create default value if local property does not
         exist.
 
-    :param elt: element from where get property value.
+    :param elt: local proprety elt to get/create. Not None methods or not \
+hashable types.
     :param str key: proprety name.
-    :param default: property value to set if key no in local properties
+    :param default: property value to set if key no in local properties.
 
-    .. limitations::
-        Do not work on None methods and not immutable types
-
-    :raises: TypeError if elt is not managed
+    :raises: TypeError if elt is not managed.
     """
 
     property_component = _get_property_component(elt)

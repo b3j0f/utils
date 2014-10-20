@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 """
-Code from http://code.activestate.com/recipes/277940-decorator-for-bindingconstants-at-compile-time/
+Code from http://code.activestate.com/recipes/277940-decorator-for-\
+bindingconstants-at-compile-time/
 
 Decorator for automatic code optimization.
 If a global is known at compile time, replace it with a constant.
@@ -23,12 +24,14 @@ try:
 except ImportError:
     ClassType = type
 
-from b3j0f.utils.version import PY3
-
 try:
     import __builtin__
 except ImportError:
     import builtins as __builtin__
+
+from b3j0f.utils.version import PY3
+
+__all__ = ['bind_all', 'make_constants']
 
 STORE_GLOBAL = opmap['STORE_GLOBAL']
 LOAD_GLOBAL = opmap['LOAD_GLOBAL']
@@ -39,6 +42,18 @@ JUMP_FORWARD = opmap['JUMP_FORWARD']
 
 
 def _make_constants(f, builtin_only=False, stoplist=[], verbose=None):
+    """
+    Generate new function where code is an input function code with all
+    LOAD_GLOBAL statements changed to LOAD_CONST statements.
+
+    :param function f: code function to transform.
+    :param bool builtin_only: only transform builtin objects.
+    :param list stoplist: attribute names to not transform.
+    :param function verbose: logger function which takes in parameter a message
+
+    .. warning::
+        Be sure global attributes to transform are not resolved dynamically.
+    """
 
     result = f
 
@@ -161,12 +176,17 @@ _make_constants = _make_constants(_make_constants)  # optimize thyself!
 
 
 def bind_all(mc, builtin_only=False, stoplist=[], verbose=None):
-    """Recursively apply constant binding to functions in a module or class.
+    """
+    Recursively apply constant binding to functions in a module or class.
 
     Use as the last line of the module (after everything is defined, but
     before test code). In modules that need modifiable globals, set
     builtin_only to True.
 
+    :param mc: module or class to transform.
+    :param bool builtin_only: only transform builtin objects.
+    :param list stoplist: attribute names to not transform.
+    :param function verbose: logger function which takes in parameter a message
     """
 
     def _bind_all(mc, builtin_only=False, stoplist=[], verbose=False):
@@ -205,16 +225,21 @@ def bind_all(mc, builtin_only=False, stoplist=[], verbose=None):
 
 @_make_constants
 def make_constants(builtin_only=False, stoplist=[], verbose=None):
-    """ Return a decorator for optimizing global references.
+    """
+    Return a decorator for optimizing global references.
 
     Replaces global references with their currently defined values.
     If not defined, the dynamic (runtime) global lookup is left undisturbed.
     If builtin_only is True, then only builtins are optimized.
     Variable names in the stoplist are also left undisturbed.
     Also, folds constant attr lookups and tuples of constants.
-    If verbose is True, prints each substitution as is occurs
+    If verbose is True, prints each substitution as is occurs.
 
+    :param bool builtin_only: only transform builtin objects.
+    :param list stoplist: attribute names to not transform.
+    :param function verbose: logger function which takes in parameter a message
     """
+
     if type(builtin_only) == type(make_constants):
         raise ValueError("The bind_constants decorator must have arguments.")
     return lambda f: _make_constants(f, builtin_only, stoplist, verbose)
