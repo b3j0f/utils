@@ -272,11 +272,12 @@ def _get_properties(elt, keys, local, exclude):
         if ismethod(elt) and elt.__self__ is not None:
             instance_class = property_component_owner.__class__
             elt_name = elt.__name__
-            method = getattr(instance_class, elt_name)
-            method_properties = _get_properties(
-                method, keys, local, exclude
-            )
-            result.update(method_properties)
+            if hasattr(instance_class, elt_name):
+                method = getattr(instance_class, elt_name)
+                method_properties = _get_properties(
+                    method, keys, local, exclude
+                )
+                result.update(method_properties)
 
         # bases classes
         if hasattr(elt, __BASES__):
