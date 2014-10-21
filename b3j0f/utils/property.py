@@ -384,8 +384,8 @@ def del_properties(elt, *keys):
         for key in keys:  # delete specific properties
             if key in properties:
                 del properties[key]
-        # delete all properties
-        if not keys:
+        # delete all properties if not keys or not properties for memory leak
+        if not (keys and properties):
             del property_component[elt]
 
 
