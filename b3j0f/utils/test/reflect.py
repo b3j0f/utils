@@ -40,9 +40,7 @@ class BaseEltsTest(UTCase):
             pass
 
         bases = base_elts(B)
-        self.assertEqual(
-            sorted(list(bases)),
-            sorted(list(B.__bases__)))
+        self.assertEqual(bases, set(B.__bases__))
 
     def test_method(self):
         """
