@@ -4,9 +4,12 @@
 Python reflection tools.
 """
 
-from types import NoneType
-
 from inspect import isclass, isroutine, ismethod
+
+try:
+    from types import NoneType
+except ImportError:
+    NoneType = type(None)
 
 __all__ = ['base_elts']
 
