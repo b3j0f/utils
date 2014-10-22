@@ -10,10 +10,12 @@ Fold tuples of constants into a single constant.
 Fold constant attribute lookups into a single constant.
 
 Modifications:
-Add constants values from opmap constants (STORE_GLOBAL, etc.) in order to
+
+- Add constants values from opmap constants (STORE_GLOBAL, etc.) in order to
     avoid to update globals.
-Modify verbose argument which is None or use a function with one argument which
+- Modify verbose argument which is None or use a function with one argument which
     can be bound to a print function or a logging function.
+- Set attributes from originary function such as __dict__, __module__, etc.
 """
 
 from opcode import opmap, HAVE_ARGUMENT, EXTENDED_ARG
@@ -39,6 +41,8 @@ LOAD_CONST = opmap['LOAD_CONST']
 LOAD_ATTR = opmap['LOAD_ATTR']
 BUILD_TUPLE = opmap['BUILD_TUPLE']
 JUMP_FORWARD = opmap['JUMP_FORWARD']
+
+WRAPPER_ASSIGNMENTS = ('__doc__', '__annotations__', '__dict__', '__module__')
 
 
 def _make_constants(f, builtin_only=False, stoplist=[], verbose=None):
@@ -169,6 +173,15 @@ def _make_constants(f, builtin_only=False, stoplist=[], verbose=None):
         codeobj = type(co)(*vargs)
         result = type(f)(codeobj, f.__globals__, f.__name__, f.__defaults__,
                     f.__closure__)
+
+        # set f attributes to result
+        for prop in WRAPPER_ASSIGNMENTS:
+            try:
+                attr = getattr(f, prop)
+            except AttributeError:
+                pass
+            else:
+                setattr(result, prop, attr)
 
     return result
 
