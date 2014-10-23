@@ -42,7 +42,7 @@ class BaseEltsTest(UTCase):
             pass
 
         bases = base_elts(B)
-        self.assertEqual(bases, set(B.__bases__))
+        self.assertEqual(bases, list(B.__bases__) + [object])
 
     def test_method(self):
         """
@@ -56,7 +56,7 @@ class BaseEltsTest(UTCase):
         class B(A):
             pass
 
-        bases = base_elts(B.a, cls=B)
+        bases = base_elts(B.a, cls=A)
         self.assertEqual(len(bases), 1)
         base = bases.pop()
         self.assertEqual(base, A.a)
@@ -74,7 +74,7 @@ class BaseEltsTest(UTCase):
             def a(self):
                 pass
 
-        bases = base_elts(B.a, cls=B)
+        bases = base_elts(B.a, cls=A)
         self.assertFalse(bases)
 
     def test_boundmethod(self):

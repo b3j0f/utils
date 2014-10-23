@@ -4,6 +4,9 @@
 Python reflection tools.
 """
 
+from b3j0f.utils.version import PY2
+from b3j0f.utils.iterable import ensureiterable
+
 from inspect import isclass, isroutine, ismethod, getmodule
 
 try:
@@ -14,67 +17,93 @@ except ImportError:
 __all__ = ['base_elts']
 
 
-def base_elts(elt, cls=None):
+def base_elts(elt, cls=None, depth=None):
     """
     Get bases elements of the input elt.
 
+    - If elt is an instance, get class and all base classes.
+    - If elt is a method, get all base methods.
+    - If elt is a class, get all base classes.
+    - In other case, get an empty list.
+
     :param elt: supposed inherited elt.
-    :param cls: cls from where find attributes equal to elt. If None, it is
-        found as much as possible. Required in python3 for function classes.
+    :param list/type cls: cls from where find attributes equal to elt. If None,
+        it is found as much as possible. Required in python3 for function
+        classes.
+    :param int depth: search depth. If None (default), depth is maximal.
     :return: elt bases elements. if elt has not base elements, result is empty.
-    :rtype: set
+    :rtype: list
     """
 
-    result = set()
+    result = []
 
     elt_name = getattr(elt, '__name__', None)
 
     if elt_name is not None:
 
-        # identify type of elt
-        if isroutine(elt):  # in case of routine (callable element)
+        cls = [] if cls is None else ensureiterable(cls)
 
-            classes = None  # classes where find base elts
+        elt_is_class = False
 
-            if cls is None:  # if cls is None, try to find it
+        # if cls is None and elt is routine, it is possible to find the cls
+        if not cls and isroutine(elt):
 
-                if hasattr(elt, '__self__'):  # from the instance
+            if hasattr(elt, '__self__'):  # from the instance
 
-                    instance = elt.__self__  # get instance
+                instance = elt.__self__  # get instance
 
-                    if instance is None and hasattr(elt, 'im_class'):
-                        # if instance is None, check if class is NoneType
-                        if issubclass(elt.im_class, NoneType):
-                            classes = (instance.__class__)
+                if instance is None and PY2:  # get base im_class if PY2
+                    cls = list(elt.im_class.__bases__)
 
-                        else:  # else get im_class
-                            classes = elt.im_class
+                else:  # use instance class
+                    cls = [instance.__class__]
 
-                    else:  # use instance class
-                        classes = (instance.__class__,)
+        # cls is elt if elt is a class
+        elif isclass(elt):
+            elt_is_class = True
+            cls = list(elt.__bases__)
 
-            else:  # classes is cls
+        if cls:  # if cls is not empty, find all base classes
 
-                classes = cls.__bases__
+            index_of_found_classes = 0  # get last visited class index
+            visited_classes = set(cls)  # cache for visited classes
+            len_classes = len(cls)
 
-            if classes is not None:  # if cls has been found
+            if depth is None:  # if depth is None, get maximal value
+                depth = -1  # set negative value
+
+            while depth != 0 and index_of_found_classes != len_classes:
+                len_classes = len(cls)
+                for index in range(index_of_found_classes, len_classes):
+                    _cls = cls[index]
+                    for base_cls in _cls.__bases__:
+                        if base_cls in visited_classes:
+                            continue
+                        else:
+                            visited_classes.add(base_cls)
+                            cls.append(base_cls)
+                index_of_found_classes = len_classes
+                depth -= 1
+
+            if elt_is_class:
+                # if cls is elt, result is classes minus first class
+                result = cls
+
+            elif isroutine(elt):
 
                 # get an elt to compare with found element
                 elt_to_compare = elt.__func__ if ismethod(elt) else elt
 
-                for cls in classes:  # for all classes
+                for _cls in cls:  # for all classes
                     # get possible base elt
-                    b_elt = getattr(cls, elt_name, None)
+                    b_elt = getattr(_cls, elt_name, None)
 
                     if b_elt is not None:
                         # compare funcs
                         bec = b_elt.__func__ if ismethod(b_elt) else b_elt
                         # if matching, add to result
                         if bec is elt_to_compare:
-                            result.add(b_elt)
-
-        elif isclass(elt):  # in case of class
-            result = set(elt.__bases__)  # add base classes to the result
+                            result.append(b_elt)
 
     return result
 
