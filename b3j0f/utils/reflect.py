@@ -4,7 +4,7 @@
 Python reflection tools.
 """
 
-from inspect import isclass, isroutine, ismethod
+from inspect import isclass, isroutine, ismethod, getmodule
 
 try:
     from types import NoneType
@@ -75,5 +75,74 @@ def base_elts(elt, cls=None):
 
         elif isclass(elt):  # in case of class
             result = set(elt.__bases__)  # add base classes to the result
+
+    return result
+
+
+def find_embedding(elt, embedding=None):
+    """
+    Try to get elt embedding elements.
+
+    :param embedding: embedding element. Must be have a module.
+
+    :return: a list of [module [,class]*] embedding elements which define elt:
+    """
+
+    result = []  # result is empty in the worst case
+
+    # start to get module
+    module = getmodule(elt)
+
+    if module is not None:  # if module exists
+
+        visited = set()  # cache to avoid to visit twice same element
+
+        if embedding is None:
+            embedding = module
+
+        # list of compounds elements which construct the path to elt
+        compounds = [embedding]
+
+        while compounds:  # while compounds elements exist
+            # get last compound
+            last_embedding = compounds[-1]
+            # stop to iterate on compounds when last embedding is elt
+            if last_embedding == elt:
+                result = compounds  # result is compounds
+                break
+
+            else:
+                # search among embedded elements
+                for name in dir(last_embedding):
+                    # get embedded element
+                    embedded = getattr(last_embedding, name)
+
+                    try:  # check if embedded has already been visited
+                        if embedded not in visited:
+                            visited.add(embedded)  # set it as visited
+
+                        else:
+                            continue
+
+                    except TypeError:
+                        pass
+
+                    else:
+
+                        try:  # get embedded module
+                            embedded_module = getmodule(embedded)
+                        except Exception:
+                            pass
+                        else:
+                            # and compare it with elt module
+                            if embedded_module is module:
+                                # add embedded to compounds
+                                compounds.append(embedded)
+                                # end the second loop
+                                break
+
+                else:
+                    # remove last element if no coumpound element is found
+                    compounds.pop(-1)
 
     return result
