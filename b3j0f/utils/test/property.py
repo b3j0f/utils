@@ -9,7 +9,7 @@ from b3j0f.utils.ut import UTCase
 from b3j0f.utils.property import (
     get_properties, put_properties, del_properties, get_local_properties,
     unify, OrderedDict, get_local_property, get_property, get_first_property,
-    setdefault
+    setdefault, put_property
 )
 
 
@@ -26,7 +26,7 @@ class PropertyTest(UTCase):
         self.assertFalse(local_properties)
 
         properties = dict((str(i), i) for i in range(count))
-        put_properties(elt, **properties)
+        put_properties(elt, properties=properties)
 
         local_properties = get_local_properties(elt)
         properties = get_properties(elt)
@@ -107,7 +107,7 @@ class PropertyTest(UTCase):
         count = 10
 
         properties = dict((str(i), i) for i in range(count))
-        put_properties(A, **properties)
+        put_properties(A, properties=properties)
 
         properties = get_properties(B)
         self.assertEqual(len(properties), 1)
@@ -117,7 +117,7 @@ class PropertyTest(UTCase):
         self.assertEqual(len(local_properties), 0)
 
         properties = dict((str(i), i) for i in range(count))
-        put_properties(B, **properties)
+        put_properties(B, properties=properties)
 
         properties = get_properties(B)
         self.assertEqual(len(properties), 2)
@@ -139,7 +139,7 @@ class PropertyTest(UTCase):
         count = 10
 
         properties = dict((str(i), i) for i in range(count))
-        put_properties(A, **properties)
+        put_properties(A, properties=properties)
 
         properties = get_properties(a)
         self.assertEqual(len(properties), 1)
@@ -171,12 +171,12 @@ class PropertyTest(UTCase):
 
         a = A()
 
-        self._assert_properties(a.a)
+        #self._assert_properties(a.a)
 
         count = 10
 
         properties = dict((str(i), i) for i in range(count))
-        put_properties(A.a, **properties)
+        put_properties(A.a, properties=properties, ctx=A)
 
         properties = get_properties(a.a)
         self.assertEqual(len(properties), 1)
@@ -221,7 +221,7 @@ class TTLTest(UTCase):
 
     def test_zero(self):
 
-        put_properties(self, ttl=0, name='1')
+        put_property(self, ttl=0, key='name', value=1)
 
         sleep(0.1)
 
@@ -233,7 +233,7 @@ class TTLTest(UTCase):
 
         ttl = 0.1
 
-        put_properties(self, ttl=ttl, name='1')
+        put_property(self, ttl=ttl, key='name', value=1)
 
         properties = get_local_properties(self)
 
@@ -263,7 +263,7 @@ class OneTest(UTCase):
 
     def test_first(self):
 
-        put_properties(self, a=1)
+        put_property(self, key='a', value=1)
 
         _property = get_first_property(self, 'a', 2)
 
@@ -277,7 +277,7 @@ class OneTest(UTCase):
 
     def test_local(self):
 
-        put_properties(self, a=1)
+        put_property(self, key='a', value=1)
 
         local_property = get_local_property(self, 'a', 2)
 
@@ -291,7 +291,7 @@ class OneTest(UTCase):
 
     def test_property(self):
 
-        put_properties(self, a=1)
+        put_property(self, key='a', value=1)
 
         _property = get_property(self, 'a')
 
@@ -355,7 +355,7 @@ class SetDefaultTest(UTCase):
         Test with an existing property
         """
 
-        put_properties(self, **{self.key: self.new_value + 1})
+        put_properties(self, properties={self.key: self.new_value + 1})
 
         value = setdefault(self, self.key, self.new_value)
 
