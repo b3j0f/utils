@@ -21,7 +21,7 @@ else:
 
 setup(
     name="b3j0f.utils",
-    version="0.7.5",
+    version="0.7.6",
     install_requires=dependencies,
     packages=find_packages(exclude=['test.*', '*.test.*']),
     author="b3j0f",

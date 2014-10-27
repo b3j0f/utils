@@ -36,6 +36,7 @@ __all__ = [
 ]
 
 from b3j0f.utils.version import PY26
+from b3j0f.utils.iterable import ensureiterable
 
 if PY26:  # import OrderedDict for python2.6 form ordereddict
     from ordereddict import OrderedDict
@@ -463,6 +464,8 @@ def del_properties(elt, keys=(), ctx=None):
 
     property_component = _get_property_component(ctx)
 
+    keys = ensureiterable(keys, iterable=tuple)
+
     # if elt properties exist
     if elt in property_component:
         properties = property_component[elt]
@@ -472,6 +475,15 @@ def del_properties(elt, keys=(), ctx=None):
         # delete all properties if not keys or not properties for memory leak
         if not (keys and properties):
             del property_component[elt]
+
+    # delete property component if empty
+    if not property_component:
+        # in case of static object
+        if elt in __STATIC_ELEMENTS_CACHE__:
+            del __STATIC_ELEMENTS_CACHE__[elt]
+        # in case of dynamic object
+        elif hasattr(elt, __DICT__) and __B3J0F__PROPERTIES__ in elt.__dict__:
+            del elt.__dict__[__B3J0F__PROPERTIES__]
 
 
 def unify(properties):
