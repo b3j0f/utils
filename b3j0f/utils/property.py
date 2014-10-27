@@ -250,7 +250,7 @@ def get_local_property(elt, key, default=None, ctx=None):
     :param ctx: elt ctx from where get properties. Equals elt if None. It
         allows to get function properties related to a class or instance if
         related function is defined in base class.
-     :raises: TypeError if elt is not managed.
+    :raises: TypeError if elt is not managed.
     """
 
     result = default
