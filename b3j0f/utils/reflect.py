@@ -14,7 +14,7 @@ try:
 except ImportError:
     NoneType = type(None)
 
-__all__ = ['base_elts']
+__all__ = ['base_elts', 'find_embedding', 'is_inherited']
 
 
 def base_elts(elt, cls=None, depth=None):
@@ -27,9 +27,10 @@ def base_elts(elt, cls=None, depth=None):
     - In other case, get an empty list.
 
     :param elt: supposed inherited elt.
-    :param list/type cls: cls from where find attributes equal to elt. If None,
+    :param cls: cls from where find attributes equal to elt. If None,
         it is found as much as possible. Required in python3 for function
         classes.
+    :type cls: type or list
     :param int depth: search depth. If None (default), depth is maximal.
     :return: elt bases elements. if elt has not base elements, result is empty.
     :rtype: list
@@ -74,11 +75,14 @@ def base_elts(elt, cls=None, depth=None):
 
             while depth != 0 and index_of_found_classes != len_classes:
                 len_classes = len(cls)
+
                 for index in range(index_of_found_classes, len_classes):
                     _cls = cls[index]
+
                     for base_cls in _cls.__bases__:
                         if base_cls in visited_classes:
                             continue
+
                         else:
                             visited_classes.add(base_cls)
                             cls.append(base_cls)
@@ -106,6 +110,14 @@ def base_elts(elt, cls=None, depth=None):
                             result.append(b_elt)
 
     return result
+
+
+def is_inherited(elt, cls=None):
+    """
+    True iif elt is inherited.
+    """
+
+    return base_elts(elt, cls=cls, depth=1)
 
 
 def find_embedding(elt, embedding=None):
