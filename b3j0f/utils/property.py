@@ -29,19 +29,17 @@ of the shape {element, {property name, property}}.
 """
 
 __all__ = [
-    'get_properties', 'get_property', 'get_first_property',
+    'get_properties',
+    'get_first_property', 'get_first_properties',
     'get_local_property', 'get_local_properties',
     'put_properties', 'del_properties',
-    'unify', 'setdefault', 'free_cache'
+    'firsts', 'remove_ctx',
+    'setdefault', 'free_cache',
+    'find_ctx'
 ]
 
-from b3j0f.utils.version import PY26
+from b3j0f.utils.version import PY2
 from b3j0f.utils.iterable import ensureiterable
-
-if PY26:  # import OrderedDict for python2.6 form ordereddict
-    from ordereddict import OrderedDict
-else:  # in other cases, import OrderedDict from collections
-    from collections import OrderedDict
 
 from inspect import ismethod
 
@@ -60,9 +58,9 @@ __BASES__ = '__bases__'  # __bases__ class attribute name
 __STATIC_ELEMENTS_CACHE__ = {}  #: dictionary of properties for static objects
 
 
-def _find_ctx(ctx, elt):
+def find_ctx(elt):
     """
-    Get the right ctx related to ctx and elt.
+    Get the right ctx related to input elt.
 
     In order to keep safe memory as much as possible, it is important to find
     the right context element. For example, instead of putting properties on
@@ -74,18 +72,18 @@ def _find_ctx(ctx, elt):
     are saved with the same key in the same function which is the function.
     """
 
-    result = ctx  # by default, result is ctx
-
-    if ctx is None:  # if ctx is None, result is elt
-        result = elt
+    result = elt  # by default, result is ctx
 
     # if elt is ctx and elt is a method, it is possible to find the best ctx
-    if elt is result and ismethod(elt):
+    if ismethod(elt):
         # get instance and class of the elt
         instance = elt.__self__
         # if instance is not None, the right context is the instance
         if instance is not None:
             result = instance
+
+        elif PY2:
+            result = elt.im_class
 
     return result
 
@@ -105,82 +103,106 @@ def free_cache(*elts):
         __STATIC_ELEMENTS_CACHE__ = {}
 
 
-def _get_property_component(elt):
+def _ctx_elt_properties(elt, ctx=None, create=False):
     """
-    Get property component which could embed properties
+    Get elt properties related to a ctx.
 
     :param elt: property component elt. Not None methods or unhashable types.
     :param ctx: elt ctx from where get properties. Equals elt if None. It
         allows to get function properties related to a class or instance if
         related function is defined in base class.
+    :param bool create: create ctx elt properties if not exist.
 
-    :return: dictionary of property by name embedded into elt __dict__ or in
-        shared __STATIC_ELEMENTS_CACHE__
+    :return: dictionary of property by name embedded into ctx __dict__ or in
+        shared __STATIC_ELEMENTS_CACHE__. None if no properties exists.
     :rtype: dict
-    :raises: TypeError if elt is not managed
+    :raises: TypeError if elt or ctx is not managed
     """
 
     result = None
 
-    # in case of dynamic object
-    if hasattr(elt, __DICT__) and isinstance(elt.__dict__, dict):
-        result = elt.__dict__.setdefault(__B3J0F__PROPERTIES__, {})
-    else:
+    if ctx is None:
+        ctx = find_ctx(elt=elt)
+
+    ctx_properties = None
+
+    # in case of dynamic object, parse the ctx __dict__
+    ctx__dict__ = getattr(ctx, __DICT__, None)
+    if ctx__dict__ is not None and isinstance(ctx__dict__, dict):
+        # if properties exist in ctx__dict__
+        if __B3J0F__PROPERTIES__ in ctx__dict__:
+            ctx_properties = ctx__dict__[__B3J0F__PROPERTIES__]
+        elif create:  # if create in worst case
+            ctx_properties = ctx__dict__[__B3J0F__PROPERTIES__] = {}
+
+    else:  # in case of static object
         try:
-            result = __STATIC_ELEMENTS_CACHE__.setdefault(elt, {})
+            if ctx in __STATIC_ELEMENTS_CACHE__:
+                ctx_properties = __STATIC_ELEMENTS_CACHE__[ctx]
+            elif create:
+                    ctx_properties = __STATIC_ELEMENTS_CACHE__[ctx] = {}
+
         except TypeError:
             # in case of not hashable object
-            raise TypeError('elt {0} must be hashable.'.format(elt))
-        result = __STATIC_ELEMENTS_CACHE__.setdefault(elt, {})
+            raise TypeError('ctx {0} must be hashable.'.format(elt))
+
+    # if ctx_properties is not None
+    if ctx_properties is not None:
+        # check if elt exist in ctx_properties
+        if elt in ctx_properties:
+            result = ctx_properties[elt]
+        elif create:  # create the right data if create
+            if create:
+                result = ctx_properties[elt] = {}
 
     return result
 
 
-def get_properties(elt, keys=(), ctx=None):
+def get_properties(elt, keys=None, ctx=None):
     """
     Get elt properties.
 
     :param elt: properties elt. Not None methods or unhashable types.
-    :param keys: keys of properties to get from elt.
+    :param keys: key(s) of properties to get from elt.
+        If None, get all properties.
+    :type keys: list or str
     :param ctx: elt ctx from where get properties. Equals elt if None. It
         allows to get function properties related to a class or instance if
         related function is defined in base class.
 
-    :return: dict of properties by elt and name.
-    :rtype: dict
+    :return: list of properties by elt and name.
+    :rtype: list
     :raises: TypeError if elt is not managed
     """
 
-    result = _get_properties(
-        elt, keys=keys, local=False, exclude=set(), ctx=ctx)
+    # initialize keys if str
+    if isinstance(keys, str):
+        keys = (keys,)
+
+    result = _get_properties(elt, keys=keys, local=False, ctx=ctx)
 
     return result
 
 
-def get_property(elt, key, ctx=None):
+def get_first_properties(elt, keys=None, ctx=None):
     """
-    Get properties related to one input key.
+    Get first properties related to one input key
 
-    :param elt: property elt. Not None methods or unhashable types.
-    :param str key: property key to get.
+    :param elt: first property elt. Not None methods or unhashable types.
+    :param list keys: property keys to get.
     :param ctx: elt ctx from where get properties. Equals elt if None. It
         allows to get function properties related to a class or instance if
         related function is defined in base class.
+
+    :return: dict of first values of elt properties.
     :raises: TypeError if elt is not managed.
     """
 
-    result = {}
+    # ensure keys is an iterable if not None
+    if isinstance(keys, str):
+        keys = (keys,)
 
-    property_elts = get_properties(elt, keys=(key,), ctx=ctx)
-
-    # parse elements in property elements
-    for property_elt in property_elts:
-        # get element properties
-        elt_properties = property_elts[property_elt]
-        # if key in element properties
-        if key in elt_properties:
-            # set result
-            result[property_elt] = elt_properties[key]
+    result = _get_properties(elt, keys=keys, first=True, ctx=ctx)
 
     return result
 
@@ -202,23 +224,16 @@ def get_first_property(elt, key, default=None, ctx=None):
 
     result = default
 
-    property_elts = get_properties(elt, keys=(key,), ctx=ctx)
+    properties = _get_properties(elt, keys=(key,), ctx=ctx, first=True)
 
-    # parse elements in property elements
-    for property_elt in property_elts:
-        # get element properties
-        elt_properties = property_elts[property_elt]
-        # if key in element properties
-        if key in elt_properties:
-            # set result
-            result = elt_properties[key]
-            # and break the loop
-            break
+    # set value if key exists in properties
+    if key in properties:
+        result = properties[key]
 
     return result
 
 
-def get_local_properties(elt, keys=(), ctx=None):
+def get_local_properties(elt, keys=None, ctx=None):
     """
     Get local elt properties (not defined in elt type or base classes).
 
@@ -233,8 +248,10 @@ def get_local_properties(elt, keys=(), ctx=None):
     :raises: TypeError if elt is not managed.
     """
 
-    result = _get_properties(
-        elt, keys=keys, local=True, exclude=set(), ctx=ctx)
+    if isinstance(keys, str):
+        keys = (keys,)
+
+    result = _get_properties(elt, keys=keys, local=True, ctx=ctx)
 
     return result
 
@@ -251,6 +268,8 @@ def get_local_property(elt, key, default=None, ctx=None):
     :param ctx: elt ctx from where get properties. Equals elt if None. It
         allows to get function properties related to a class or instance if
         related function is defined in base class.
+    :return: dict of properties by name.
+    :rtype: dict
     :raises: TypeError if elt is not managed.
     """
 
@@ -264,7 +283,10 @@ def get_local_property(elt, key, default=None, ctx=None):
     return result
 
 
-def _get_properties(elt, keys, local, exclude, ctx=None):
+def _get_properties(
+    elt, keys=None, local=False, exclude=None, first=False, ctx=None,
+    _found_keys=None
+):
     """
     Get a dictionary of elt properties.
 
@@ -275,47 +297,76 @@ def _get_properties(elt, keys, local, exclude, ctx=None):
     :param ctx: elt ctx from where get properties. Equals elt if None. It
         allows to get function properties related to a class or instance if
         related function is defined in base class.
-    :param keys: keys of properties to get from elt.
+    :param keys: keys of properties to get from elt. If None, get all
+        properties.
     :param bool local: if False, get properties from bases classes and type
         as well.
     :param set exclude: elts from where not get properties.
+    :param bool first: get only first property values.
+    :param _found_keys: used such as a cache value for result.
 
-    :return: dict of properties:
-        - if local: {name, value}.
-        - if not local: {elt, {name, value}}.
+    :return: dict of properties by name and ...:
+
+        - if local or first: value.
+        - other cases: [(elt, value)] in order of property definition even if
+            multi inheritance do not ensure to respect inheritance order in a
+            list.
     :rtype: dict
 
     :raises: TypeError if elt is not managed.
     """
 
-    result = OrderedDict()
+    result = {}
 
     # get the best context
-    ctx = _find_ctx(ctx=ctx, elt=elt)
+    if ctx is None:
+        ctx = find_ctx(elt=elt)
 
-    # get ctx property component
-    property_component = _get_property_component(ctx)
+    # initialize found keys
+    if first and _found_keys is None:
+        _found_keys = set()
 
-    # if elt exists in property component
-    if elt in property_component:
-        # get properties
-        properties = property_component[elt]
-        # if properties exist
-        if properties:
-            # try to add all property values in result[elt]
-            result[elt] = {}
+    # get elt properties if exist
+    elt_properties = _ctx_elt_properties(elt=elt, ctx=ctx, create=False)
+
+    # if elt_properties exists
+    if elt_properties is not None:
+        # if elt properties is not empty
+        # try to add property values in result related to input keys
+        properties_to_keep = elt_properties.copy() if keys is None else {}
+        # get key values
+        if keys is not None:
             for key in keys:
-                if key in properties:
-                    result[elt][key] = properties[key]
-            # add all properties if keys is not specified
-            if not keys:
-                result[elt] = properties.copy()
-            # delete result[elt] if empty
-            if not result[elt]:
-                del result[elt]
+                if key in elt_properties:
+                    if not first or key not in _found_keys:
+                        properties_to_keep[key] = elt_properties[key]
+                    if first and not key in _found_keys:
+                        _found_keys.add(key)
 
-    # if not local, get properties from
-    if not local:
+        if local:  # in case of local, use properties_to_keep
+            result = properties_to_keep
+
+        # if not local and not first and properties to keep
+        elif not first and properties_to_keep:
+            for name in properties_to_keep:
+                property_to_keep = properties_to_keep[name]
+                # add (elt, properties_to_keep) in result
+                if name not in result:
+                    result[name] = [(elt, property_to_keep)]
+                else:
+                    result[name].append((elt, property_to_keep))
+
+        # in case of first, result is properties_to_keep
+        elif properties_to_keep:
+            result = properties_to_keep
+    # check if all keys have been found if first
+    keys_left = not first or keys is None or len(keys) != len(_found_keys)
+
+    # if not local or keys left
+    if not local and keys_left:
+        # initialize exclude
+        if exclude is None:
+            exclude = set()
 
         # add elt in exclude in order to avoid to get elt properties twice
         exclude.add(elt)
@@ -329,7 +380,7 @@ def _get_properties(elt, keys, local, exclude, ctx=None):
                 pass
             else:
                 # if elt is a sub attr of ctx
-                if hasattr(ctx, elt_name) and getattr(ctx, elt_name) == elt:
+                if hasattr(ctx, elt_name):
                     if hasattr(ctx, __BASES__):
                         ctx_bases = ctx.__bases__
                     elif hasattr(ctx, __CLASS__):
@@ -337,18 +388,24 @@ def _get_properties(elt, keys, local, exclude, ctx=None):
                     else:
                         ctx_bases = ()
                     for base_ctx in ctx_bases:
-                        if hasattr(base_ctx, elt_name):
-                            base_elt = getattr(base_ctx, elt_name)
-                            if hasattr(base_elt, __DICT__):
-                                if base_elt.__dict__ is elt.__dict__:
-                                    base_properties = _get_properties(
-                                        elt=base_elt,
-                                        keys=keys,
-                                        local=local,
-                                        exclude=exclude,
-                                        ctx=base_ctx
-                                    )
-                                    result.update(base_properties)
+                        # get base_elt properties
+                        base_elt = getattr(base_ctx, elt_name, None)
+                        if base_elt is not None:
+                            base_properties = _get_properties(
+                                elt=base_elt,
+                                keys=keys,
+                                local=local,
+                                exclude=exclude,
+                                ctx=base_ctx,
+                                _found_keys=_found_keys
+                            )
+                            # update result with base_properties
+                            for name in base_properties:
+                                properties = base_properties[name]
+                                if name not in result:
+                                    result[name] = properties
+                                else:
+                                    result[name] += properties
 
         else:
             # bases classes
@@ -360,42 +417,59 @@ def _get_properties(elt, keys, local, exclude, ctx=None):
                             keys=keys,
                             local=local,
                             exclude=exclude,
-                            ctx=base
+                            ctx=base,
+                            _found_keys=_found_keys
                         )
-                        result.update(base_result)
+                        # update result with base_result
+                        for name in base_result:
+                            properties = base_result[name]
+                            if name not in result:
+                                result[name] = properties
+                            else:
+                                result[name] += properties
 
             # search among type definition
 
             # class
             if hasattr(elt, __CLASS__):
                 elt_class = elt.__class__
-                if elt_class not in exclude:
+                # get class properties only if elt is not its own class
+                if elt_class is not elt and elt_class not in exclude:
                     elt_class_properties = _get_properties(
                         elt=elt_class,
                         keys=keys,
                         local=local,
                         exclude=exclude,
-                        ctx=elt_class
+                        ctx=elt_class,
+                        _found_keys=_found_keys
                     )
-                    result.update(elt_class_properties)
+                    # update result with class result
+                    for name in elt_class_properties:
+                        properties = elt_class_properties[name]
+                        if name not in result:
+                            result[name] = properties
+                        else:
+                            result[name] += properties
 
             # type
             elt_type = type(elt)
+            # get elt type properties only if elt is not its type
             if elt_type is not elt and elt_type not in exclude:
                 elt_type_properties = _get_properties(
                     elt=elt_type,
                     keys=keys,
                     local=local,
                     exclude=exclude,
-                    ctx=elt_type
+                    ctx=elt_type,
+                    _found_keys=_found_keys
                 )
-                result.update(elt_type_properties)
-
-    elif elt in result:  # else, result is result[elt]
-        result = result[elt]
-
-    else:  # if no local property exist, return an empty dict
-        result = {}
+                # update result with type properties
+                for name in elt_type_properties:
+                    properties = elt_type_properties[name]
+                    if name not in result:
+                        result[name] = properties
+                    else:
+                        result[name] += properties
 
     return result
 
@@ -427,13 +501,13 @@ def put_properties(elt, properties, ttl=None, ctx=None):
     if properties:
 
         # get the best context
-        ctx = _find_ctx(ctx=ctx, elt=elt)
+        if ctx is None:
+            ctx = find_ctx(elt=elt)
 
-        # get property component
-        property_component = _get_property_component(ctx)
+        # get elt properties
+        elt_properties = _ctx_elt_properties(elt=elt, ctx=ctx, create=True)
 
         # set properties
-        elt_properties = property_component.setdefault(elt, {})
         elt_properties.update(properties)
 
         if ttl is not None:
@@ -448,7 +522,18 @@ def put_properties(elt, properties, ttl=None, ctx=None):
     return result
 
 
-def del_properties(elt, keys=(), ctx=None):
+def put(properties, ttl=None, ctx=None):
+    """
+    Decorator dedicated to put properties on an element.
+    """
+
+    def put_on(elt):
+        return put_properties(elt=elt, properties=properties, ttl=ttl, ctx=ctx)
+
+    return put_on
+
+
+def del_properties(elt, keys=None, ctx=None):
     """
     Delete elt property.
 
@@ -460,39 +545,45 @@ def del_properties(elt, keys=(), ctx=None):
     """
 
     # get the best context
-    ctx = _find_ctx(ctx=ctx, elt=elt)
+    if ctx is None:
+        ctx = find_ctx(elt=elt)
 
-    property_component = _get_property_component(ctx)
-
-    keys = ensureiterable(keys, iterable=tuple)
+    elt_properties = _ctx_elt_properties(elt=elt, ctx=ctx, create=False)
 
     # if elt properties exist
-    if elt in property_component:
-        properties = property_component[elt]
-        for key in keys:  # delete specific properties
-            if key in properties:
-                del properties[key]
-        # delete all properties if not keys or not properties for memory leak
-        if not (keys and properties):
-            del property_component[elt]
+    if elt_properties is not None:
 
-    # delete property component if empty
-    if not property_component:
-        # in case of static object
-        if elt in __STATIC_ELEMENTS_CACHE__:
-            del __STATIC_ELEMENTS_CACHE__[elt]
-        # in case of dynamic object
-        elif hasattr(elt, __DICT__) and __B3J0F__PROPERTIES__ in elt.__dict__:
-            del elt.__dict__[__B3J0F__PROPERTIES__]
+        if keys is None:
+            keys = list(elt_properties.keys())
+
+        else:
+            keys = ensureiterable(keys, iterable=tuple, exclude=str)
+
+        for key in keys:
+            if key in elt_properties:
+                del elt_properties[key]
+
+        # delete property component if empty
+        if not elt_properties:
+            # in case of static object
+            if ctx in __STATIC_ELEMENTS_CACHE__:
+                del __STATIC_ELEMENTS_CACHE__[ctx][elt]
+                if not __STATIC_ELEMENTS_CACHE__[ctx]:
+                    del __STATIC_ELEMENTS_CACHE__[ctx]
+
+            else:  # in case of dynamic object
+                del ctx.__dict__[__B3J0F__PROPERTIES__][elt]
+                if not ctx.__dict__[__B3J0F__PROPERTIES__]:
+                    del ctx.__dict__[__B3J0F__PROPERTIES__]
 
 
-def unify(properties):
+def firsts(properties):
     """
-    Transform a dictionary of {elts, {name, value}} (resulting from
+    Transform a dictionary of {name: [(elt, value)+]} (resulting from
         get_properties) to a dictionary of {name, value} where names are first
         encountered in input properties.
 
-    :param OrderedDict properties: properties to unify.
+    :param dict properties: properties to firsts.
     :return: dictionary of parameter values by names.
     :rtype: dict
     """
@@ -500,15 +591,30 @@ def unify(properties):
     result = {}
 
     # parse elts
-    for elt in properties:
-        # get elt properties
-        elt_properties = properties[elt]
-        # iterate on elt property names
-        for name in elt_properties:
-            # add property in result only if not already present in result
-            if name not in result:
-                value = elt_properties[name]
-                result[name] = value
+    for name in properties:
+        elt_properties = properties[name]
+        # add property values in result[name]
+        result[name] = elt_properties[0][1]
+
+    return result
+
+
+def remove_ctx(properties):
+    """
+    Transform a dictionary of {name: [(elt, value)+]} into a dictionary of
+        {name: [value+]}.
+
+    :param dict properties: properties from where get only values.
+    :return: dictionary of parameter values by names.
+    :rtype: dict
+    """
+    result = {}
+    # parse elts
+    for name in properties:
+        elt_properties = properties[name]
+        result[name] = []
+        for _, value in elt_properties:
+            result[name].append(value)
 
     return result
 
@@ -518,25 +624,29 @@ def setdefault(elt, key, default, ctx=None):
     Get a local property and create default value if local property does not
         exist.
 
-    :param elt: local proprety elt to get/create. Not None methods or not \
-hashable types.
+    :param elt: local proprety elt to get/create. Not None methods or not
+        hashable types.
     :param str key: proprety name.
     :param default: property value to set if key no in local properties.
 
+    :return: property value or default if property does not exist.
     :raises: TypeError if elt is not managed.
     """
 
+    result = default
+
     # get the best context
-    ctx = _find_ctx(ctx=ctx, elt=elt)
+    if ctx is None:
+        ctx = find_ctx(elt=elt)
 
-    property_component = _get_property_component(ctx)
+    # get elt properties
+    elt_properties = _ctx_elt_properties(elt=elt, ctx=ctx, create=True)
 
-    elt_properties = property_component.setdefault(elt, {})
-
-    if key not in elt_properties:
-
+    # if key exists in elt properties
+    if key in elt_properties:
+        # result is elt_properties[key]
+        result = elt_properties[key]
+    else:  # set default property value
         elt_properties[key] = default
-
-    result = elt_properties[key]
 
     return result
