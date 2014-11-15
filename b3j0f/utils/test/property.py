@@ -363,7 +363,7 @@ class PropertyTest(UTCase):
         """
         elt = {}
 
-        self.assertRaises(TypeError, get_properties, elt)
+        self._assert_properties(elt)
 
     def test_list(self):
         """
@@ -371,7 +371,7 @@ class PropertyTest(UTCase):
         """
         elt = []
 
-        self.assertRaises(TypeError, get_properties, elt)
+        self._assert_properties(elt)
 
     def test_inheritance(self):
         """

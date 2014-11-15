@@ -27,18 +27,7 @@
 """
 Library which aims to bind named properties on any element at runtime.
 
-This module can bind a named property on:
-
-    - not modifiable elements such as builtin or class with __slots__
-    - functions
-    - modules
-    - classes
-    - namespaces (class without base class)
-    - methods
-    - instance methods (except for None methods)
-    - instance objects (object(), 1, None, etc).
-
-And can not bind on None methods and unhashable types such as dict or list.
+This module can bind a named property on any element but None methods.
 
 In preserving binding from inheritance and automatical mechanisms which prevent
 to set any attribute on any elements.
@@ -67,6 +56,8 @@ from b3j0f.utils.iterable import ensureiterable
 
 from inspect import ismethod
 
+from collections import Hashable
+
 try:
     from threading import Timer
 except ImportError:
@@ -80,6 +71,7 @@ __SELF__ = '__self__'  #: __self__ class instance attribute name
 __BASES__ = '__bases__'  # __bases__ class attribute name
 
 __STATIC_ELEMENTS_CACHE__ = {}  #: dictionary of properties for static objects
+__UNHASHABLE_ELTS_CACHE__ = {}  #: dictionary of properties for unhashable obj
 
 
 def find_ctx(elt):
@@ -112,19 +104,25 @@ def find_ctx(elt):
     return result
 
 
-def free_cache(*elts):
+def free_cache(ctx, *elts):
     """
     Free properties bound to input cached elts. If empty, free the whole cache.
     """
 
-    global __STATIC_ELEMENTS_CACHE__
+    global __STATIC_ELEMENTS_CACHE__, __UNHASHABLE_ELTS_CACHE__
 
     for elt in elts:
-        if elt in __STATIC_ELEMENTS_CACHE__:
-            del __STATIC_ELEMENTS_CACHE__[elt]
+        if isinstance(elt, Hashable):
+            cache = __STATIC_ELEMENTS_CACHE__
+        else:
+            cache = __UNHASHABLE_ELTS_CACHE__
+            elt = id(elt)
+        if elt in cache:
+            del cache[elt]
 
     if not elts:
         __STATIC_ELEMENTS_CACHE__ = {}
+        __UNHASHABLE_ELTS_CACHE__ = {}
 
 
 def _ctx_elt_properties(elt, ctx=None, create=False):
@@ -160,15 +158,19 @@ def _ctx_elt_properties(elt, ctx=None, create=False):
             ctx_properties = ctx__dict__[__B3J0F__PROPERTIES__] = {}
 
     else:  # in case of static object
-        try:
-            if ctx in __STATIC_ELEMENTS_CACHE__:
-                ctx_properties = __STATIC_ELEMENTS_CACHE__[ctx]
-            elif create:
-                    ctx_properties = __STATIC_ELEMENTS_CACHE__[ctx] = {}
-
-        except TypeError:
-            # in case of not hashable object
-            raise TypeError('ctx {0} must be hashable.'.format(elt))
+        if isinstance(ctx, Hashable):  # search among static elements
+            cache = __STATIC_ELEMENTS_CACHE__
+        else:  # or unhashable elements
+            cache = __UNHASHABLE_ELTS_CACHE__
+            ctx = id(ctx)
+            if not isinstance(elt, Hashable):
+                elt = id(elt)
+        # if ctx is in cache
+        if ctx in cache:
+            # get its properties
+            ctx_properties = cache[ctx]
+        elif create:  # elif create, get an empty dict
+            ctx_properties = cache[ctx] = {}
 
     # if ctx_properties is not None
     if ctx_properties is not None:
@@ -393,7 +395,8 @@ def _get_properties(
             exclude = set()
 
         # add elt in exclude in order to avoid to get elt properties twice
-        exclude.add(elt)
+        if isinstance(elt, Hashable):
+            exclude.add(elt)
 
         # and search among bases ctx elements
         if ctx is not elt:
@@ -589,11 +592,20 @@ def del_properties(elt, keys=None, ctx=None):
 
         # delete property component if empty
         if not elt_properties:
+
+            if isinstance(ctx, Hashable):
+                cache = __STATIC_ELEMENTS_CACHE__
+            else:
+                cache = __UNHASHABLE_ELTS_CACHE__
+                ctx = id(ctx)
+                if not isinstance(elt, Hashable):
+                    elt = id(elt)
+
             # in case of static object
-            if ctx in __STATIC_ELEMENTS_CACHE__:
-                del __STATIC_ELEMENTS_CACHE__[ctx][elt]
-                if not __STATIC_ELEMENTS_CACHE__[ctx]:
-                    del __STATIC_ELEMENTS_CACHE__[ctx]
+            if ctx in cache:
+                del cache[ctx][elt]
+                if not cache[ctx]:
+                    del cache[ctx]
 
             else:  # in case of dynamic object
                 del ctx.__dict__[__B3J0F__PROPERTIES__][elt]
