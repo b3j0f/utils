@@ -592,25 +592,34 @@ def del_properties(elt, keys=None, ctx=None):
 
         # delete property component if empty
         if not elt_properties:
-
-            if isinstance(ctx, Hashable):
-                cache = __STATIC_ELEMENTS_CACHE__
-            else:
-                cache = __UNHASHABLE_ELTS_CACHE__
-                ctx = id(ctx)
-                if not isinstance(elt, Hashable):
+            # case of dynamic object
+            if isinstance(getattr(ctx, '__dict__', None), dict):
+                try:
+                    if elt in ctx.__dict__[__B3J0F__PROPERTIES__]:
+                        del ctx.__dict__[__B3J0F__PROPERTIES__][elt]
+                except TypeError:  # if elt is unhashable
                     elt = id(elt)
-
-            # in case of static object
-            if ctx in cache:
-                del cache[ctx][elt]
-                if not cache[ctx]:
-                    del cache[ctx]
-
-            else:  # in case of dynamic object
-                del ctx.__dict__[__B3J0F__PROPERTIES__][elt]
+                    if elt in ctx.__dict__[__B3J0F__PROPERTIES__]:
+                        del ctx.__dict__[__B3J0F__PROPERTIES__][elt]
+                # if ctx_properties is empty, delete it
                 if not ctx.__dict__[__B3J0F__PROPERTIES__]:
                     del ctx.__dict__[__B3J0F__PROPERTIES__]
+
+            # case of static object and hashable
+            else:
+                if isinstance(ctx, Hashable):
+                    cache = __STATIC_ELEMENTS_CACHE__
+                else:  # case of static and unhashable object
+                    cache = __UNHASHABLE_ELTS_CACHE__
+                    ctx = id(ctx)
+                    if not isinstance(elt, Hashable):
+                        elt = id(elt)
+
+                # in case of static object
+                if ctx in cache:
+                    del cache[ctx][elt]
+                    if not cache[ctx]:
+                        del cache[ctx]
 
 
 def firsts(properties):
