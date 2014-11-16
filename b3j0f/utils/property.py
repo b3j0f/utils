@@ -136,9 +136,9 @@ def _ctx_elt_properties(elt, ctx=None, create=False):
     :param bool create: create ctx elt properties if not exist.
 
     :return: dictionary of property by name embedded into ctx __dict__ or in
-        shared __STATIC_ELEMENTS_CACHE__. None if no properties exists.
+        shared __STATIC_ELEMENTS_CACHE__ or else in shared
+        __UNHASHABLE_ELTS_CACHE__. None if no properties exists.
     :rtype: dict
-    :raises: TypeError if elt or ctx is not managed
     """
 
     result = None
@@ -198,7 +198,6 @@ def get_properties(elt, keys=None, ctx=None):
 
     :return: list of properties by elt and name.
     :rtype: list
-    :raises: TypeError if elt is not managed
     """
 
     # initialize keys if str
@@ -210,18 +209,41 @@ def get_properties(elt, keys=None, ctx=None):
     return result
 
 
+def get_property(elt, key, ctx=None):
+    """
+    Get elt key property.
+
+    :param elt: property elt. Not None methods.
+    :param key: property key to get from elt.
+    :param ctx: elt ctx from where get properties. Equals elt if None. It
+        allows to get function properties related to a class or instance if
+        related function is defined in base class.
+
+    :return: list of property values by elt.
+    :rtype: list
+    """
+
+    result = []
+
+    properties = get_properties(elt=elt, ctx=ctx, keys=key)
+
+    if key in properties:
+        result = properties[key]
+
+    return result
+
+
 def get_first_properties(elt, keys=None, ctx=None):
     """
     Get first properties related to one input key
 
-    :param elt: first property elt. Not None methods or unhashable types.
+    :param elt: first property elt. Not None methods.
     :param list keys: property keys to get.
     :param ctx: elt ctx from where get properties. Equals elt if None. It
         allows to get function properties related to a class or instance if
         related function is defined in base class.
 
     :return: dict of first values of elt properties.
-    :raises: TypeError if elt is not managed.
     """
 
     # ensure keys is an iterable if not None
@@ -237,15 +259,13 @@ def get_first_property(elt, key, default=None, ctx=None):
     """
     Get first property related to one input key
 
-    :param elt: first property elt. Not None methods or unhashable types.
+    :param elt: first property elt. Not None methods.
     :param str key: property key to get.
     :param default: default value to return if key does not exist in elt.
         properties
     :param ctx: elt ctx from where get properties. Equals elt if None. It
         allows to get function properties related to a class or instance if
         related function is defined in base class.
-
-    :raises: TypeError if elt is not managed.
     """
 
     result = default
@@ -263,7 +283,7 @@ def get_local_properties(elt, keys=None, ctx=None):
     """
     Get local elt properties (not defined in elt type or base classes).
 
-    :param elt: local properties elt. Not None methods or unhashable types.
+    :param elt: local properties elt. Not None methods.
     :param keys: keys of properties to get from elt.
     :param ctx: elt ctx from where get properties. Equals elt if None. It
         allows to get function properties related to a class or instance if
@@ -271,7 +291,6 @@ def get_local_properties(elt, keys=None, ctx=None):
 
     :return: dict of properties by name.
     :rtype: dict
-    :raises: TypeError if elt is not managed.
     """
 
     if isinstance(keys, str):
@@ -287,7 +306,7 @@ def get_local_property(elt, key, default=None, ctx=None):
     Get one local property related to one input key or default value if key is
         not found.
 
-    :param elt: local property elt. Not None methods or unhashable types.
+    :param elt: local property elt. Not None methods.
     :param str key: property key to get.
     :param default: default value to return if key does not exist in elt
         properties.
@@ -296,7 +315,6 @@ def get_local_property(elt, key, default=None, ctx=None):
         related function is defined in base class.
     :return: dict of properties by name.
     :rtype: dict
-    :raises: TypeError if elt is not managed.
     """
 
     result = default
@@ -319,7 +337,7 @@ def _get_properties(
     Such dictionary is filled related to the elt properties, and from all base
         elts properties if not local.
 
-    :param elt: properties elt. Not None methods or unhashable types.
+    :param elt: properties elt. Not None methods.
     :param ctx: elt ctx from where get properties. Equals elt if None. It
         allows to get function properties related to a class or instance if
         related function is defined in base class.
@@ -338,8 +356,6 @@ def _get_properties(
             multi inheritance do not ensure to respect inheritance order in a
             list.
     :rtype: dict
-
-    :raises: TypeError if elt is not managed.
     """
 
     result = {}
@@ -510,7 +526,7 @@ def put_properties(elt, properties, ttl=None, ctx=None):
     """
     Put properties in elt.
 
-    :param elt: properties elt to put. Not None methods or unhashable types.
+    :param elt: properties elt to put. Not None methods.
     :param number ttl: If not None, property time to leave.
     :param ctx: elt ctx from where put properties. Equals elt if None. It
         allows to get function properties related to a class or instance if
@@ -519,8 +535,6 @@ def put_properties(elt, properties, ttl=None, ctx=None):
 
     :return: Timer if ttl is not None.
     :rtype: Timer
-
-    :raises: TypeError if elt is not managed.
     """
 
     result = None
@@ -564,11 +578,9 @@ def del_properties(elt, keys=None, ctx=None):
     """
     Delete elt property.
 
-    :param elt: properties elt to del. Not None methods or not hashable types.
+    :param elt: properties elt to del. Not None methods.
     :param keys: property keys to delete from elt. If empty, delete all
         properties.
-
-    :raises: TypeError if elt is not managed.
     """
 
     # get the best context
@@ -669,13 +681,11 @@ def setdefault(elt, key, default, ctx=None):
     Get a local property and create default value if local property does not
         exist.
 
-    :param elt: local proprety elt to get/create. Not None methods or not
-        hashable types.
+    :param elt: local proprety elt to get/create. Not None methods.
     :param str key: proprety name.
     :param default: property value to set if key no in local properties.
 
     :return: property value or default if property does not exist.
-    :raises: TypeError if elt is not managed.
     """
 
     result = default
