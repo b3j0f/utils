@@ -33,7 +33,7 @@ from os.path import abspath, dirname, join
 _path = dirname(abspath(__file__))
 
 # get long description
-with open(join(_path, 'README')) as f:
+with open(join(_path, 'README.rst')) as f:
     desc = f.read()
 
 setup(
