@@ -38,21 +38,31 @@ with open(join(_path, 'README')) as f:
 
 setup(
     name="b3j0f.utils",
-    version="0.7.10",
+    version="0.7.11",
     packages=find_packages(exclude=['test.*', '*.test.*']),
     author="b3j0f",
     author_email="jlabejof@yahoo.fr",
     description="b3j0f utils",
     long_description=desc,
     include_package_data=True,
-    url='https://github.com/mrbozzo/utils/',
+    url='https://github.com/b3j0f/utils/',
     license='MIT License',
     classifiers=[
-        "Development Status :: 1 - Planning",
+        "Development Status :: 4 - Beta",
         "License :: OSI Approved :: MIT License",
         "Natural Language :: French",
         "Operating System :: OS Independent",
+        "Topic :: Utilities",
+        "Topic :: Software Development",
+        "Intended Audience :: Developers",
         "Programming Language :: Python",
+        "Programming Language :: Python :: 2.6",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3.0",
+        "Programming Language :: Python :: 3.1",
+        "Programming Language :: Python :: 3.2",
+        "Programming Language :: Python :: 3.3",
+        "Programming Language :: Python :: 3.4"
     ],
     test_suite='b3j0f'
 )

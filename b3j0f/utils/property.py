@@ -666,7 +666,7 @@ def remove_ctx(properties):
     :rtype: dict
     """
     result = {}
-    # parse elts
+
     for name in properties:
         elt_properties = properties[name]
         result[name] = []
