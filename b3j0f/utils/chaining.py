@@ -30,9 +30,6 @@ This module aims to provide tools to chaining of calls.
 
 __all__ = ['Chaining']
 
-from inspect import isroutine
-from functools import wraps
-
 
 class Chaining(object):
     """
@@ -139,10 +136,12 @@ class ListChaining(Chaining):
             routines = [None] * len(self_content)
             # get routines from self._content and input key
             for index, content in enumerate(self_content):
+                routine = None
                 try:
                     routine = getattr(content, key)
-                except Exception as routine:
-                    pass  # in case of exception, routine is the exception
+                except Exception as e:
+                    # in case of exception, routine is the exception
+                    routine = e
                 # in all cases, put routine in routines
                 routines[index] = routine
             result = _process_function_list(self, routines)
@@ -168,8 +167,8 @@ def _process_function_list(self, routines):
             else:
                 try:
                     result = routine(*args, **kwargs)
-                except Exception as result:
-                    pass
+                except Exception as e:
+                    result = e
             results[index] = result
         self._results.append(results)
 
