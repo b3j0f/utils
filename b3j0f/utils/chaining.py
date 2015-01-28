@@ -28,7 +28,7 @@
 This module aims to provide tools to chaining of calls.
 """
 
-__all__ = ['Chaining']
+__all__ = ['Chaining', 'ListChaining']
 
 
 class Chaining(object):
@@ -43,7 +43,11 @@ class Chaining(object):
 
     For example:
     >>> chaining = Chaining('example').upper().capitalize()
+    >>> chaining.content
+    'example'
     >>> chaining += '.'
+    >>> chaining.content
+    'example.'
     >>> chaining[0]
     'EXAMPLE'
     >>> chaining[1]
@@ -54,17 +58,15 @@ class Chaining(object):
     'example.'
     >>> chaining[:]
     ['EXAMPLE', 'Example', 'example.']
-    >>> chaining._content
-    'example'
     """
 
-    __slots__ = ('_content', '_results')
+    __slots__ = ('content', '_results')
 
     def __init__(self, content):
 
         super(Chaining, self).__init__()
 
-        self._content = content
+        self.content = content
         self._results = []
 
     def __getitem__(self, key):
@@ -77,8 +79,8 @@ class Chaining(object):
             # check if key is in self slots
             result = super(Chaining, self).__getattribute__(key)
 
-        else:  # else try to get key from self._content
-            attr = getattr(self._content, key)
+        else:  # else try to get key from self.content
+            attr = getattr(self.content, key)
             # embed routine in self._processing_name method
             result = _process_function(self, attr)
 
@@ -117,6 +119,24 @@ class ListChaining(Chaining):
 
     According to content length, chaining results are saved in a list where
         values are call result or exception if an exeception occured.
+
+    For example:
+    >>> chaining = ListChaining('example', 'test').upper().capitalize()
+    >>> chaining.content
+    ['example', 'test']
+    >>> chaining += '.'
+    >>> chaining.content
+    ['example.', 'test.']
+    >>> chaining[0]
+    ['EXAMPLE', 'TEST']
+    >>> chaining[1]
+    ['Example', 'Test']
+    >>> chaining[2]
+    ['example.', 'test.']
+    >>> chaining[-1]
+    ['example.', 'test.']
+    >>> chaining[:]
+    [['EXAMPLE', 'TEST'], ['Example', 'Test'], ['example.', 'test.']]
     """
 
     __slots__ = Chaining.__slots__
@@ -132,9 +152,9 @@ class ListChaining(Chaining):
 
         else:
             # list of routines to execute
-            self_content = self._content
+            self_content = self.content
             routines = [None] * len(self_content)
-            # get routines from self._content and input key
+            # get routines from self.content and input key
             for index, content in enumerate(self_content):
                 routine = None
                 try:
