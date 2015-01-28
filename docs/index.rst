@@ -6,11 +6,6 @@
 Welcome to b3j0f.utils's documentation!
 =======================================
 
-Contents:
-
-.. toctree::
-   :maxdepth: 2
-
 Indices and tables
 ==================
 
