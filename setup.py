@@ -38,7 +38,7 @@ with open(join(_path, 'README.rst')) as f:
 
 setup(
     name="b3j0f.utils",
-    version="0.8.2",
+    version="0.8.4",
     packages=find_packages(exclude=['test.*', '*.test.*']),
     author="b3j0f",
     author_email="jlabejof@yahoo.fr",
