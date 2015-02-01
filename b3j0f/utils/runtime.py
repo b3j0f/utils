@@ -70,8 +70,7 @@ WRAPPER_ASSIGNMENTS = ('__doc__', '__annotations__', '__dict__', '__module__')
 
 
 def _make_constants(f, builtin_only=False, stoplist=[], verbose=None):
-    """
-    Generate new function where code is an input function code with all
+    """Generate new function where code is an input function code with all
     LOAD_GLOBAL statements changed to LOAD_CONST statements.
 
     :param function f: code function to transform.
@@ -213,8 +212,7 @@ _make_constants = _make_constants(_make_constants)  # optimize thyself!
 
 
 def bind_all(mc, builtin_only=False, stoplist=[], verbose=None):
-    """
-    Recursively apply constant binding to functions in a module or class.
+    """Recursively apply constant binding to functions in a module or class.
 
     Use as the last line of the module (after everything is defined, but
     before test code). In modules that need modifiable globals, set
@@ -262,8 +260,7 @@ def bind_all(mc, builtin_only=False, stoplist=[], verbose=None):
 
 @_make_constants
 def make_constants(builtin_only=False, stoplist=[], verbose=None):
-    """
-    Return a decorator for optimizing global references.
+    """Return a decorator for optimizing global references.
 
     Replaces global references with their currently defined values.
     If not defined, the dynamic (runtime) global lookup is left undisturbed.

@@ -42,8 +42,7 @@ __all__ = ['base_elts', 'find_embedding', 'is_inherited']
 
 
 def base_elts(elt, cls=None, depth=None):
-    """
-    Get bases elements of the input elt.
+    """Get bases elements of the input elt.
 
     - If elt is an instance, get class and all base classes.
     - If elt is a method, get all base methods.
@@ -137,20 +136,24 @@ def base_elts(elt, cls=None, depth=None):
 
 
 def is_inherited(elt, cls=None):
-    """
-    True iif elt is inherited.
+    """True iif elt is inherited in a base class.
+
+    :param elt: elt to check such as an inherited element.
+    :param type cls: base cls where find the base elt.
+    :return: true if elt is an inherited element.
+    :rtype: bool
     """
 
     return base_elts(elt, cls=cls, depth=1)
 
 
 def find_embedding(elt, embedding=None):
-    """
-    Try to get elt embedding elements.
+    """Try to get elt embedding elements.
 
-    :param embedding: embedding element. Must be have a module.
+    :param embedding: embedding element. Must have a module.
 
-    :return: a list of [module [,class]*] embedding elements which define elt:
+    :return: a list of [module [,class]*] embedding elements which define elt.
+    :rtype: list
     """
 
     result = []  # result is empty in the worst case

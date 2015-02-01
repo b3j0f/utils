@@ -32,16 +32,16 @@ __all__ = ['Chaining', 'ListChaining']
 
 
 class Chaining(object):
-    """
-    Class which permits to process chaining of routines/attr such as call
-        chaining in javascript.
+    """Class which permits to process chaining of routines/attr such as call
+    chaining in javascript.
 
     In order to chain calls, start to embed an object, then call embedded
     object methods which returns all the Chaining object. Finally, if you want
     to get back method results, use Chaining.__getitem__ method where the index
-    corresponds to the order of calls. Therefore
+    corresponds to the order of calls.
 
-    For example:
+    :Example:
+
     >>> chaining = Chaining('example').upper().capitalize()
     >>> chaining.content
     'example'
@@ -96,8 +96,7 @@ def _process_function(chaining, routine):
     """
 
     def processing(*args, **kwargs):
-        """
-        Execute routine with input args and kwargs and add reuslt in
+        """Execute routine with input args and kwargs and add reuslt in
         chaining._results.
 
         :param tuple args: routine varargs.
@@ -114,13 +113,13 @@ def _process_function(chaining, routine):
 
 
 class ListChaining(Chaining):
-    """
-    Apply chaining on a list of objects.
+    """Apply chaining on a list of objects.
 
     According to content length, chaining results are saved in a list where
         values are call result or exception if an exeception occured.
 
-    For example:
+    :Example:
+
     >>> chaining = ListChaining('example', 'test').upper().capitalize()
     >>> chaining.content
     ['example', 'test']
@@ -170,8 +169,7 @@ class ListChaining(Chaining):
 
 
 def _process_function_list(self, routines):
-    """
-    Chain function which returns a function.
+    """Chain function which returns a function.
 
     :param routine: routine to process.
     :param tuple args: routine varargs.

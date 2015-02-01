@@ -63,17 +63,18 @@ if PY26:
     from sys import getdefaultencoding
 
     def getcallargs(func, *positional, **named):
-        """
-        Get the mapping of arguments to values.
+        """Get the mapping of arguments to values.
 
-        A dict is returned, with keys the function argument names (including the
-        names of the * and ** arguments, if any), and values the respective bound
-        values from 'positional' and 'named'."""
+        A dict is returned, with keys the function argument names (including
+        the names of the * and ** arguments, if any), and values the respective
+        bound values from 'positional' and 'named'.
+        """
         args, varargs, varkw, defaults = getargspec(func)
         f_name = func.__name__
         arg2value = {}
 
-        # The following closures are basically because of tuple parameter unpacking.
+        # The following closures are basically because of tuple parameter
+        # unpacking.
         assigned_tuple_params = []
 
         def assign(arg, value):
@@ -122,7 +123,8 @@ if PY26:
         elif num_args == 0 and num_total:
             if varkw:
                 if num_pos:
-                    # XXX: We should use num_pos, but Python also uses num_total:
+                    # XXX: We should use num_pos, but Python also uses
+                    # num_total:
                     raise TypeError('%s() takes exactly 0 arguments '
                                     '(%d given)' % (f_name, num_total))
             else:

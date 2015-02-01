@@ -518,13 +518,23 @@ def _get_properties(
 
 
 def put_property(elt, key, value, ttl=None, ctx=None):
+    """Put properties in elt.
 
+    :param elt: properties elt to put. Not None methods.
+    :param number ttl: If not None, property time to leave.
+    :param ctx: elt ctx from where put properties. Equals elt if None. It
+        allows to get function properties related to a class or instance if
+        related function is defined in base class.
+    :param dict properties: properties to put in elt. elt and ttl are exclude.
+
+    :return: Timer if ttl is not None.
+    :rtype: Timer
+    """
     return put_properties(elt=elt, properties={key: value}, ttl=ttl, ctx=ctx)
 
 
 def put_properties(elt, properties, ttl=None, ctx=None):
-    """
-    Put properties in elt.
+    """Put properties in elt.
 
     :param elt: properties elt to put. Not None methods.
     :param number ttl: If not None, property time to leave.

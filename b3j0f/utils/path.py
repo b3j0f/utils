@@ -25,7 +25,7 @@
 # --------------------------------------------------------------------
 
 """
-Tools for managing path resolution of python objects
+Tools for managing path resolution of python objects.
 """
 
 # ensure str are unicodes
@@ -49,10 +49,11 @@ __LOOKUP_CACHE = {}
 
 
 def clearcache(path=None):
-    """
-    Clear cache memory for input path.
+    """Clear cache memory for input path.
 
     :param str path: element path to remove from cache. If None clear all cache
+
+    :Example:
 
     >>> incache('b3j0f.utils')
     False
@@ -79,9 +80,18 @@ def clearcache(path=None):
 
 
 def incache(path):
-    """
+    """Check if input path is in cache.
+
     :return: True if path is in cache
     :rtype: bool
+
+    :Example:
+
+    >>> incache('b3j0f.utils')
+    False
+    >>> lookup('b3j0f.utils')
+    >>> incache('b3j0f.utils')
+    True
     """
 
     global __LOOKUP_CACHE
@@ -90,8 +100,7 @@ def incache(path):
 
 
 def lookup(path, cache=True):
-    """
-    Get element reference from input element.
+    """Get element reference from input element.
 
     :limitations: it does not resolve class methods
         or static values such as True, False, numbers, string and keywords.
@@ -105,11 +114,6 @@ def lookup(path, cache=True):
     :rtype: object
 
     :raises ImportError: if path is wrong
-
-    >>> lookup('__builtin__.open')
-    open
-    >>> lookup("b3j0f.utils.path.lookup")
-    lookup
     """
 
     result = None
@@ -196,8 +200,7 @@ def lookup(path, cache=True):
 
 
 def getpath(element):
-    """
-    Get full path of a given element such as the opposite of the
+    """Get full path of a given element such as the opposite of the
     resolve_path behaviour.
 
     :param element: must be directly defined into a module or a package and has
@@ -207,6 +210,11 @@ def getpath(element):
     :rtype: str
 
     :raises AttributeError: if element has not the attribute __name__.
+
+    :Example:
+
+    >>> getpath(getpath)
+    b3j0f.utils.path.getpath
     """
 
     if not hasattr(element, '__name__'):

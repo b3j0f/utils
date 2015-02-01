@@ -38,8 +38,7 @@ __all__ = ['UTCase']
 
 
 class UTCase(TestCase):
-    """
-    Class which enrichs TestCase with python version compatibilities
+    """Class which enrichs TestCase with python version compatibilities.
     """
 
     def __init__(self, *args, **kwargs):
