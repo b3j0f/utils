@@ -14,6 +14,12 @@ Common tools useful to b3j0f projects.
 .. image:: https://coveralls.io/repos/b3j0f/utils/badge.png
   :target: https://coveralls.io/r/b3j0f/utils
 
+Links
+-----
+
+- `Homepage`_
+- `Documentation`_
+
 Indices and tables
 ------------------
 
@@ -113,7 +119,5 @@ Perspectives
 
 - Cython implementation.
 
-Documentation
--------------
-
-http://pythonhosted.org/b3j0f.utils
+.. _Homepage: https://github.com/b3j0f/utils
+.. _Documentation: http://pythonhosted.org/b3j0f.utils
