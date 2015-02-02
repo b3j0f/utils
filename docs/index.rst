@@ -3,10 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-b3j0f.utils: utility tools in b3j0f projects
+b3j0f.utils: utility tools in python projects
 ============================================
 
-Common tools useful to b3j0f projects.
+Common tools useful to python projects.
 
 .. image:: https://pypip.in/license/b3j0f.utils/badge.svg
    :target: https://pypi.python.org/pypi/b3j0f.utils/
