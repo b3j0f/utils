@@ -8,16 +8,47 @@ b3j0f.utils: utility tools in b3j0f projects
 
 Common tools useful to b3j0f projects.
 
+.. image:: https://pypip.in/license/b3j0f.utils/badge.svg
+   :target: https://pypi.python.org/pypi/b3j0f.utils/
+   :alt: License
+
+.. image:: https://pypip.in/status/b3j0f.utils/badge.svg
+   :target: https://pypi.python.org/pypi/b3j0f.utils/
+   :alt: Development Status
+
+.. image:: https://pypip.in/version/b3j0f.utils/badge.svg?text=version
+   :target: https://pypi.python.org/pypi/b3j0f.utils/
+   :alt: Latest release
+
+.. image:: https://pypip.in/py_versions/b3j0f.utils/badge.svg
+   :target: https://pypi.python.org/pypi/b3j0f.utils/
+   :alt: Supported Python versions
+
+.. image:: https://pypip.in/implementation/b3j0f.utils/badge.svg
+   :target: https://pypi.python.org/pypi/b3j0f.utils/
+   :alt: Supported Python implementations
+
+.. image:: https://pypip.in/format/b3j0f.utils/badge.svg
+   :target: https://pypi.python.org/pypi/b3j0f.utils/
+   :alt: Download format
+
 .. image:: https://travis-ci.org/b3j0f/utils.svg?branch=master
-    :target: https://travis-ci.org/b3j0f/utils
+   :target: https://travis-ci.org/b3j0f/utils
+   :alt: Build status
 
 .. image:: https://coveralls.io/repos/b3j0f/utils/badge.png
-  :target: https://coveralls.io/r/b3j0f/utils
+   :target: https://coveralls.io/r/b3j0f/utils
+   :alt: Code test coverage
+
+.. image:: https://pypip.in/download/b3j0f.utils/badge.svg?period=month
+   :target: https://pypi.python.org/pypi/b3j0f.utils/
+   :alt: Downloads
 
 Links
 -----
 
 - `Homepage`_
+- `PyPI`_
 - `Documentation`_
 
 Indices and tables
@@ -121,3 +152,4 @@ Perspectives
 
 .. _Homepage: https://github.com/b3j0f/utils
 .. _Documentation: http://pythonhosted.org/b3j0f.utils
+.. _PyPI: https://pypi.python.org/pypi/b3j0f.utils/
