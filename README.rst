@@ -138,6 +138,13 @@ Perspectives
 
 - Cython implementation.
 
+Donating
+--------
+
+.. image:: https://cdn.rawgit.com/gratipay/gratipay-badge/2.3.0/dist/gratipay.png
+   :target: https://gratipay.com/b3j0f/
+   :alt: I'm grateful for gifts, but don't have a specific funding goal.
+
 .. _Homepage: https://github.com/b3j0f/utils
 .. _Documentation: http://pythonhosted.org/b3j0f.utils
 .. _PyPI: https://pypi.python.org/pypi/b3j0f.utils/
