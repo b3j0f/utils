@@ -43,6 +43,7 @@ Links
 -----
 
 - `Homepage`_
+- `PyPI`_
 - `Documentation`_
 
 Installation
@@ -139,3 +140,4 @@ Perspectives
 
 .. _Homepage: https://github.com/b3j0f/utils
 .. _Documentation: http://pythonhosted.org/b3j0f.utils
+.. _PyPI: https://pypi.python.org/pypi/b3j0f.utils/
