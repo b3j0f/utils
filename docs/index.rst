@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 b3j0f.utils: utility tools in python projects
-============================================
+=============================================
 
 Common tools useful to python projects.
 
