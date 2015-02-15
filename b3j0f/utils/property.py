@@ -75,8 +75,7 @@ __UNHASHABLE_ELTS_CACHE__ = {}  #: dictionary of properties for unhashable obj
 
 
 def find_ctx(elt):
-    """
-    Get the right ctx related to input elt.
+    """Get the right ctx related to input elt.
 
     In order to keep safe memory as much as possible, it is important to find
     the right context element. For example, instead of putting properties on
@@ -105,8 +104,8 @@ def find_ctx(elt):
 
 
 def free_cache(ctx, *elts):
-    """
-    Free properties bound to input cached elts. If empty, free the whole cache.
+    """Free properties bound to input cached elts. If empty, free the whole
+    cache.
     """
 
     global __STATIC_ELEMENTS_CACHE__, __UNHASHABLE_ELTS_CACHE__
@@ -126,8 +125,7 @@ def free_cache(ctx, *elts):
 
 
 def _ctx_elt_properties(elt, ctx=None, create=False):
-    """
-    Get elt properties related to a ctx.
+    """Get elt properties related to a ctx.
 
     :param elt: property component elt. Not None methods or unhashable types.
     :param ctx: elt ctx from where get properties. Equals elt if None. It
@@ -185,8 +183,7 @@ def _ctx_elt_properties(elt, ctx=None, create=False):
 
 
 def get_properties(elt, keys=None, ctx=None):
-    """
-    Get elt properties.
+    """Get elt properties.
 
     :param elt: properties elt. Not None methods or unhashable types.
     :param keys: key(s) of properties to get from elt.
@@ -210,8 +207,7 @@ def get_properties(elt, keys=None, ctx=None):
 
 
 def get_property(elt, key, ctx=None):
-    """
-    Get elt key property.
+    """Get elt key property.
 
     :param elt: property elt. Not None methods.
     :param key: property key to get from elt.
@@ -234,8 +230,7 @@ def get_property(elt, key, ctx=None):
 
 
 def get_first_properties(elt, keys=None, ctx=None):
-    """
-    Get first properties related to one input key
+    """Get first properties related to one input key.
 
     :param elt: first property elt. Not None methods.
     :param list keys: property keys to get.
@@ -256,8 +251,7 @@ def get_first_properties(elt, keys=None, ctx=None):
 
 
 def get_first_property(elt, key, default=None, ctx=None):
-    """
-    Get first property related to one input key
+    """Get first property related to one input key.
 
     :param elt: first property elt. Not None methods.
     :param str key: property key to get.
@@ -280,8 +274,7 @@ def get_first_property(elt, key, default=None, ctx=None):
 
 
 def get_local_properties(elt, keys=None, ctx=None):
-    """
-    Get local elt properties (not defined in elt type or base classes).
+    """Get local elt properties (not defined in elt type or base classes).
 
     :param elt: local properties elt. Not None methods.
     :param keys: keys of properties to get from elt.
@@ -302,9 +295,8 @@ def get_local_properties(elt, keys=None, ctx=None):
 
 
 def get_local_property(elt, key, default=None, ctx=None):
-    """
-    Get one local property related to one input key or default value if key is
-        not found.
+    """Get one local property related to one input key or default value if key
+    is not found.
 
     :param elt: local property elt. Not None methods.
     :param str key: property key to get.
@@ -331,8 +323,7 @@ def _get_properties(
     elt, keys=None, local=False, exclude=None, first=False, ctx=None,
     _found_keys=None
 ):
-    """
-    Get a dictionary of elt properties.
+    """Get a dictionary of elt properties.
 
     Such dictionary is filled related to the elt properties, and from all base
         elts properties if not local.

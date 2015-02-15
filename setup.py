@@ -29,8 +29,6 @@ from setuptools import setup, find_packages
 
 from os.path import abspath, dirname, join
 
-from functools import reduce
-
 # get setup directory abspath
 _path = dirname(abspath(__file__))
 
@@ -40,7 +38,8 @@ with open(join(_path, 'README.rst')) as f:
 
 keywords = [
     'utils', 'chaining', 'iterable', 'tools', 'path', 'property', 'dynamic',
-    'reflection', 'reflect', 'runtime', 'unittest', 'unit test', 'version'
+    'reflection', 'reflect', 'runtime', 'unittest', 'unit test', 'version',
+    'common'
 ]
 
 setup(
@@ -49,7 +48,7 @@ setup(
     packages=find_packages(exclude=['test.*', '*.test.*']),
     author="b3j0f",
     author_email="jlabejof@yahoo.fr",
-    description="b3j0f utils",
+    description="Set of tools and utilities useful in python projects",
     long_description=desc,
     include_package_data=True,
     url='https://github.com/b3j0f/utils/',
@@ -72,5 +71,5 @@ setup(
         "Programming Language :: Python :: 3.4"
     ],
     test_suite='b3j0f',
-    keywords=reduce(lambda x, y: '{0} {1}'.format(x, y), keywords)
+    keywords=keywords
 )
