@@ -24,127 +24,328 @@
 # SOFTWARE.
 # --------------------------------------------------------------------
 
-__all__ = ['get_proxy']
+__all__ = ['get_proxy', 'proxify_routine', 'proxify_elt']
 
-"""Module in charge of creating proxies.
+"""Module in charge of creating proxies like the design pattern ``proxy``.
+
+A proxy is based on a callable element. It respects its signature but not the
+implementation.
 """
+
+from time import time
 
 from functools import wraps
 
-from types import MethodType
+from types import MethodType, FunctionType
 
-from inspect import getmembers, isroutine, isfunction, ismethod, getargspec
+from opcode import opmap
 
-from abc import ABCMeta
+from inspect import (
+    getmembers, isroutine, ismethod, getargspec, getfile, isbuiltin, isclass
+)
 
-from b3j0f.utils.version import PY2, basestring
+from b3j0f.utils.version import PY2, PY3, basestring
 from b3j0f.utils.path import lookup
 
-#: list of attributes to set after wrapping a function with a joinpoint
-WRAPPER_ASSIGNMENTS = ['__doc__', '__module__', '__name__']
+# consts for interception loading
+LOAD_GLOBAL = opmap['LOAD_GLOBAL']
+LOAD_CONST = opmap['LOAD_CONST']
+
+#: list of attributes to set after proxifying a function
+WRAPPER_ASSIGNMENTS = ['__doc__', '__name__']
+#: list of attributes to update after proxifying a function
 WRAPPER_UPDATES = ['__dict__']
+#: lambda function name
+__LAMBDA_NAME__ = (lambda: None).__name__
+#: proxy class name
+__PROXY_CLASS__ = 'Proxy'
+#: attribute name for proxified element
+__PROXIFIED__ = '__proxified__'
 
 
-class ProxyMeta(ABCMeta):
-    """Meta class for proxy elements.
+def proxify_elt(elt, bases=None, dict=None):
+    """Proxify a class with input elt.
+
+    :param elt: elt to proxify.
+    :param bases: elt class base classes.
+    :param dict: elt class content.
     """
 
-    def __call__(cls, elt, bases=None, content=None, *args, **kwargs):
-        """A proxy may be called with base types and a reference to an
-        elt.
+    # ensure dict is a dictionary
+    if dict is None:
+        dict = {}
+    # ensure bases is a tuple of types
+    if bases is None:
+        bases = ()
+    elif isinstance(bases, basestring):
+        bases = (lookup(bases),)
+    elif isclass(bases):
+        bases = (bases,)
+    else:  # fill dict with routines of bases
+        bases = tuple(bases)
+        for base in bases:
+            for name, member in getmembers(base, lambda m: isroutine(m)):
+                if not hasattr(elt, name):
+                    dict[name] = member
+    # generate a new proxy class
+    cls = type('Proxy', bases, dict)
+    # delete initialization methods
+    try:
+        delattr(cls, '__new__')
+    except AttributeError:
+        pass
+    try:
+        delattr(cls, '__init__')
+    except AttributeError:
+        pass
+    # proxify methods/functions
+    for name in dict:
+        value = dict[name]
+        if isroutine(value):
+            proxy_routine = proxify_routine(value)
+            setattr(cls, name, proxy_routine)
+    # instantiate proxy cls
+    result = cls()
+    # bind elt to proxy
+    setattr(result, __PROXIFIED__, elt)
 
-        :param cls: cls to instantiate.
-        :param elt: elt to proxify.
-        :param bases: If not None, base types to proxify.
-        :param content: If not None, class members to proxify.
-        """
-
-        result = super(ProxyMeta, cls).__call__(*args, **kwargs)
-        # init content
-        content = {} if content is None else content
-        # enrich proxy with bases
-        if bases is not None:
-            # ensure bases is a set of types
-            if isinstance(bases, basestring):
-                bases = [lookup(bases)]
-            elif issubclass(bases, type):
-                bases = [bases]
-            else:  # convert all str to type
-                bases = [
-                    base if issubclass(base, type) else lookup(base)
-                    for base in bases
-                ]
-            # enrich cls with base types
-            for base in bases:
-                # register base in cls
-                cls.register(base)
-                # enrich methods/functions
-                for name, member in getmembers(
-                    base, lambda member: isroutine(member)
-                ):
-                    if name not in content:
-                        content[name] = member
-
-        # enrich proxy with content
-        for name in content:
-            if not hasattr(cls, name):
-                value = content[name]
-                proxy = ProxyMeta.proxify_routine(
-                    value, elt=elt, name=name
-                )
-                if proxy is not None:
-                    setattr(cls, name, proxy)
-
-        return result
-
-    @staticmethod
-    def proxify_routine(target, elt=None, name=None):
-
-        @wraps(target)
-        def result(*args, **kwargs):
-            if elt is None:
-                result = target(*args, **kwargs)
-            else:
-                result = getattr(elt, name)(*args, **kwargs)
-
-            return result
-
-        return result
-
-# create proxy class
-if PY2:
-    class Proxy(object):
-        __metaclass__ = ProxyMeta
-
-else:
-    # compile Proxy class on the fly because it is not PY2 syntaxically correct
-    codestr = "class Proxy(object, metaclass=ProxyMeta): pass\n"
-    code = compile(codestr, __file__, 'single')
-    exec(code, globals())
-# set docstring to proxy class
-Proxy.__doc__ = "Proxy class"
+    return result
 
 
-def get_proxy(elt, bases=None, content=None):
-    """Get proxified elt.
+def proxify_routine(routine, impl=None):
+    """Proxify a routine with input impl.
+
+    :param routine: routine to proxify.
+    :param impl: new impl to use. If None, use routine.
+    """
+
+    # init impl
+    impl = routine if impl is None else impl
+
+    try:
+        __file__ = getfile(routine)
+    except TypeError:
+        __file__ = '<string>'
+
+    isMethod = ismethod(routine)
+    if isMethod:
+        function = routine.__func__
+    else:
+        function = routine
+
+    # flag which indicates that the function is not a pure python function
+    # and has to be wrapped
+    wrap_function = not hasattr(function, '__code__')
+
+    try:
+        # get params from routine
+        args, varargs, kwargs, _ = getargspec(function)
+    except TypeError:
+        # in case of error, wrap the function
+        wrap_function = True
+
+    if wrap_function:
+        # if function is not pure python, create a generic one
+        # with assignments
+        assigned = []
+        for wrapper_assignment in WRAPPER_ASSIGNMENTS:
+            if hasattr(function, wrapper_assignment):
+                assigned.append(wrapper_assignment)
+        # and updates
+        updated = []
+        for wrapper_update in WRAPPER_UPDATES:
+            if hasattr(function, wrapper_update):
+                updated.append(wrapper_update)
+
+        @wraps(function, assigned=assigned, updated=updated)
+        def function(*args, **kwargs):
+            pass
+
+    # get params from routine wrapper
+    args, varargs, kwargs, _ = getargspec(function)
+
+    # get params from routine
+    name = function.__name__
+
+    # flag for lambda function
+    isLambda = __LAMBDA_NAME__ == function.__name__
+    if isLambda:
+        name = '_{0}'.format(int(time()))
+
+    # get join method for reducing concatenation time execution
+    join = "".join
+
+    # default indentation
+    indent = '    '
+
+    if isLambda:
+        newcodestr = "{0} = lambda ".format(name)
+    else:
+        newcodestr = "def {0}(".format(name)
+
+    if args:
+        newcodestr = join((newcodestr, "{0}".format(args[0])))
+    for arg in args[1:]:
+        newcodestr = join((newcodestr, ", {0}".format(arg)))
+
+    if varargs is not None:
+        if args:
+            newcodestr = join((newcodestr, ", "))
+        newcodestr = join((newcodestr, "*{0}".format(varargs)))
+
+    if kwargs is not None:
+        if args or varargs is not None:
+            newcodestr = join((newcodestr, ", "))
+        newcodestr = join((newcodestr, "**{0}".format(kwargs)))
+
+    # insert impl call
+    if isLambda:
+        newcodestr = join((newcodestr, ": impl("))
+    else:
+        newcodestr = join((
+            newcodestr,
+            "):\n{0}return impl(".format(indent))
+        )
+
+    if args:
+        newcodestr = join((newcodestr, "{0}".format(args[0])))
+    for arg in args[1:]:
+        newcodestr = join((newcodestr, ", {0}".format(arg)))
+
+    if varargs is not None:
+        if args:
+            newcodestr = join((newcodestr, ", "))
+        newcodestr = join((newcodestr, "*{0}".format(varargs)))
+
+    if kwargs is not None:
+        if args or varargs is not None:
+            newcodestr = join((newcodestr, ", "))
+        newcodestr = join((newcodestr, "**{0}".format(kwargs)))
+
+    newcodestr = join((newcodestr, ")\n"))
+
+    # compile newcodestr
+    code = compile(newcodestr, __file__, 'single')
+
+    # define the code with the new function
+    _globals = {}
+    exec(code, _globals)
+
+    # get new code
+    newco = _globals[name].__code__
+
+    # get new consts list
+    newconsts = list(newco.co_consts)
+
+    if PY3:
+        newcode = list(newco.co_code)
+    else:
+        newcode = map(ord, newco.co_code)
+
+    consts_values = {'impl': impl}
+
+    # change LOAD_GLOBAL to LOAD_CONST
+    index = 0
+    newcodelen = len(newcode)
+    while index < newcodelen:
+        if newcode[index] == LOAD_GLOBAL:
+            oparg = newcode[index + 1] + (newcode[index + 2] << 8)
+            name = newco.co_names[oparg]
+            if name in consts_values:
+                const_value = consts_values[name]
+                if const_value in newconsts:
+                    pos = newconsts.index(const_value)
+                else:
+                    pos = len(newconsts)
+                    newconsts.append(consts_values[name])
+                newcode[index] = LOAD_CONST
+                newcode[index + 1] = pos & 0xFF
+                newcode[index + 2] = pos >> 8
+        index += 1
+
+    # get code string
+    codestr = bytes(newcode) if PY3 else join(map(chr, newcode))
+
+    # get vargs
+    vargs = [
+        newco.co_argcount, newco.co_nlocals, newco.co_stacksize,
+        newco.co_flags, codestr, tuple(newconsts), newco.co_names,
+        newco.co_varnames, newco.co_filename, newco.co_name,
+        newco.co_firstlineno, newco.co_lnotab,
+        function.__code__.co_freevars,
+        newco.co_cellvars
+    ]
+    if PY3:
+        vargs.insert(1, newco.co_kwonlyargcount)
+
+    # instanciate a new code object
+    codeobj = type(newco)(*vargs)
+    # instanciate a new function
+    if function is None or isbuiltin(function):
+        result = FunctionType(codeobj, {})
+    else:
+        result = type(function)(
+            codeobj, function.__globals__, function.__name__,
+            function.__defaults__, function.__closure__
+        )
+    # set wrapping assignments
+    for wrapper_assignment in WRAPPER_ASSIGNMENTS:
+        try:
+            value = getattr(function, wrapper_assignment)
+        except AttributeError:
+            pass
+        else:
+            setattr(result, wrapper_assignment, value)
+    # set proxy module
+    result.__module__ = proxify_routine.__module__
+    # update wrapping updating
+    for wrapper_update in WRAPPER_UPDATES:
+        try:
+            value = getattr(function, wrapper_update)
+        except AttributeError:
+            pass
+        else:
+            getattr(result, wrapper_update).update(value)
+
+    # set proxyfied element on proxy
+    setattr(result, __PROXIFIED__, routine)
+
+    if isMethod:  # create a new method
+        args = [result, routine.__self__]
+        if PY2:
+            args.append(routine.im_class)
+        result = MethodType(*args)
+
+    return result
+
+
+def get_proxy(elt, bases=None, dict=None):
+    """Get proxy from an elt.
 
     :param elt: elt to proxify.
     :type elt: object or function/method
     :param bases: base types to enrich in the result cls if not None.
-    :param content: class members to proxify if not None.
+    :param dict: class members to proxify if not None.
     """
 
-    if isfunction(elt):
-        result = ProxyMeta.proxify_routine(elt)
-
-    elif ismethod(elt):
-        function = ProxyMeta.proxify_routine(elt)
-        args = [function, elt]
-        if PY2:  # add class to args in PY2
-            args.append(elt.__class__)
-        result = MethodType(*args)
+    if isroutine(elt):
+        result = proxify_routine(elt)
 
     else:  # in case of object, result is a Proxy
-        result = Proxy(elt, bases=bases, content=content)
+        result = proxify_elt(elt, bases=bases, dict=dict)
+
+    return result
+
+
+def proxified_elt(proxy):
+    """Get proxified element.
+
+    :param proxy: proxy element from where get proxified element.
+    :return: proxified element. None if proxy is not proxified.
+    """
+
+    if ismethod(proxy):
+        proxy = proxy.__func__
+    result = getattr(proxy, __PROXIFIED__, None)
 
     return result
