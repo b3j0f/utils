@@ -64,6 +64,7 @@ Provided tools are:
 - property: (un)bind/find properties in reflective and oop concerns.
 - reflect: tools which ease development with reflective concerns.
 - runtime: ease runtime execution.
+- proxy: create proxy (from design pattern) objects from a routine or an object which respects the signature and description of the proxified element.
 - ut: improve unit tests.
 - version: ease compatibility between python version (from 2.x to 3.x).
 
@@ -133,10 +134,36 @@ True
 >>> is_inherited(BaseTest.test)
 False
 
+Proxy
+#####
+
+>> from b3j0f.utils.proxy import get_proxy, proxified_elt
+>>> l = lambda: 2
+>>> proxy = get_proxy(l, lambda: 3)
+>>> proxy()
+3
+>>> assert proxified_elt(proxy) is l
+True
+>>> proxified_elt(proxy)()
+2
+>>> proxy = get_proxy(l)
+>>> proxy()
+2
+>>> assert proxy is not l
+>>> assert proxified_elt(proxy) is l
+
 Perspectives
 ------------
 
 - Cython implementation.
+
+ChangeLog
+---------
+
+0.8.5 (02/16/15)
+################
+
+- Add proxy module.
 
 Donating
 --------
