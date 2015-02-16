@@ -27,11 +27,11 @@
 
 from unittest import main
 
-from inspect import getargspec, isbuiltin, getmembers
+from inspect import getargspec, isbuiltin, getmembers, isroutine
 
 from b3j0f.utils.ut import UTCase
-from b3j0f.utils.proxy.core import (
-    get_proxy, proxify_routine, proxify_elt, proxified_elt
+from b3j0f.utils.proxy import (
+    get_proxy, proxify_routine, proxify_elt, proxified_elt, is_proxy
 )
 
 
@@ -102,61 +102,96 @@ class ProxyEltTest(UTCase):
     """Test proxy elt function.
     """
 
-    def _assert_elt(self, elt, bases=None, dict=None):
+    def _assert_elt(self, add_bases=False, add_dict=None):
         """Assert to proxify an elt.
         """
 
-        proxy = proxify_elt(elt, bases=bases, dict=dict)
+        class A(object):
+            def a(self):
+                pass
 
-        if bases is not None:
+        class B:
+            def b(self):
+                pass
+
+        class C(A, B):
+            def test(self):
+                pass
+
+        elt = C()
+
+        bases = (elt.__class__.__base__,) if add_bases else None
+        _dict = {'test': lambda: None} if add_dict else None
+
+        proxy = proxify_elt(elt, bases=bases, _dict=_dict)
+
+        if add_bases:
+            # check if forgave bases are not proxified
+            for base in elt.__class__.__bases__[1:]:
+                self.assertNotIsInstance(proxy, base)
+            # check if gave bases are proxified
             for base in bases:
                 self.assertIsInstance(proxy, base)
-                for name, member in getmembers(base):
-                    elt_member = getattr(elt, name)
-                    proxy_member = getattr(proxy, name)
-                    proxified_member = proxified_elt(proxy_member)
-                    print proxified_member
-                    self.assertIs(proxified_member, elt_member)
-                    if not isbuiltin(elt_member):
-                        self.assertIs(routine.__class__, proxy.__class__)
-                        self.assertEqual(proxy.__dict__, routine.__dict__)
-                    self.assertEqual(proxy.__name__, routine.__name__)
-                    self.assertEqual(proxy.__doc__, routine.__doc__)
-                    self.assertEqual(proxy.__module__, proxy_routine.__module__)
-                    # assert proxified element is routine
-                    proxified = proxified_elt(proxy)
-                    self.assertIs(proxified, routine)
+                for name, member in getmembers(base, lambda m: isroutine(m)):
+                    elt_member = getattr(elt, name, None)
+                    if hasattr(elt_member, '__func__'):
+                        elt_member = elt_member.__func__
+                        proxy_member = getattr(proxy, name).__func__
+                        proxified_member = proxified_elt(proxy_member)
+                        proxified_member = getattr(
+                            proxified_member, '__func__', proxified_member
+                        )
+                        self.assertIs(proxified_member, elt_member)
+                        if not isbuiltin(elt_member):
+                            self.assertIs(
+                                elt_member.__class__, proxy_member.__class__
+                            )
+                            self.assertIsNot(
+                                elt_member.__dict__, proxy_member.__dict__
+                            )
+                        self.assertEqual(
+                            elt_member.__name__, proxy_member.__name__
+                        )
+                        self.assertEqual(
+                            elt_member.__doc__, proxy_member.__doc__
+                        )
+                        self.assertEqual(
+                            proxy_member.__module__, proxify_elt.__module__
+                        )
 
-        if dict is not None:
-            for name in dict:
-                member = dict[name]
-                print member, name
+        if add_dict:
+            for name in _dict:
+                member = _dict[name]
+                proxy_member = getattr(proxy, name)
+                proxified_member = proxified_elt(proxy_member)
+                proxified_member = getattr(
+                    proxified_member, '__func__', proxified_member
+                )
+                self.assertIs(proxified_member, member)
 
     def test_elt(self):
         """Test to proxify an elt.
         """
 
-        self._assert_elt(self)
+        self._assert_elt()
 
     def test_elt_bases(self):
         """Test to proxify an elt with bases.
         """
 
-        self._assert_elt(self, bases=[dict])
+        self._assert_elt(add_bases=True)
 
     def test_elt_dict(self):
-        """Test to proxify an elt with dict.
+        """Test to proxify an elt with _dict.
         """
+
+        self._assert_elt(add_dict=True)
 
     def test_elt_bases_dict(self):
-        """Test to proxify an elt with bases and dict.
+        """Test to proxify an elt with bases and _dict.
         """
 
-    def test_class(self):
-        """Test to proxify a class.
-        """
-
-        self._assert_elt(self.__class__)
+        self._assert_elt(add_bases=True, add_dict=True)
 
 
 if __name__ == '__main__':

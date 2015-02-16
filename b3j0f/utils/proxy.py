@@ -24,7 +24,7 @@
 # SOFTWARE.
 # --------------------------------------------------------------------
 
-__all__ = ['get_proxy', 'proxify_routine', 'proxify_elt']
+__all__ = ['get_proxy', 'proxify_routine', 'proxify_elt', 'is_proxy']
 
 """Module in charge of creating proxies like the design pattern ``proxy``.
 
@@ -63,17 +63,19 @@ __PROXY_CLASS__ = 'Proxy'
 __PROXIFIED__ = '__proxified__'
 
 
-def proxify_elt(elt, bases=None, dict=None):
+def proxify_elt(elt, bases=None, _dict=None):
     """Proxify a class with input elt.
 
     :param elt: elt to proxify.
     :param bases: elt class base classes.
-    :param dict: elt class content.
+    :param _dict: elt class content.
+    :return: proxified element.
+    :raises: TypeError if elt does not implement all routines of bases and
+    _dict.
     """
 
-    # ensure dict is a dictionary
-    if dict is None:
-        dict = {}
+    # ensure _dict is a dictionary
+    _dict = {} if _dict is None else _dict.copy()
     # ensure bases is a tuple of types
     if bases is None:
         bases = ()
@@ -81,14 +83,31 @@ def proxify_elt(elt, bases=None, dict=None):
         bases = (lookup(bases),)
     elif isclass(bases):
         bases = (bases,)
-    else:  # fill dict with routines of bases
+    else:  # fill _dict with routines of bases
         bases = tuple(bases)
         for base in bases:
             for name, member in getmembers(base, lambda m: isroutine(m)):
                 if not hasattr(elt, name):
-                    dict[name] = member
+                    raise TypeError(
+                        "Wrong elt {0}. Must implement {1} ({2}) of {3}".
+                        format(elt, name, member, base)
+                    )
+                if name not in _dict:
+                    _dict[name] = member
+    # proxify _dict
+    for name in _dict:
+        value = _dict[name]
+        if not hasattr(elt, name):
+            raise TypeError(
+                "Wrong elt {0}. Must implement {1} ({2})".format(
+                    elt, name, value
+                )
+            )
+        if isroutine(value):
+            routine_proxy = proxify_routine(value)
+            _dict[name] = routine_proxy
     # generate a new proxy class
-    cls = type('Proxy', bases, dict)
+    cls = type('Proxy', bases, _dict)
     # delete initialization methods
     try:
         delattr(cls, '__new__')
@@ -98,12 +117,6 @@ def proxify_elt(elt, bases=None, dict=None):
         delattr(cls, '__init__')
     except AttributeError:
         pass
-    # proxify methods/functions
-    for name in dict:
-        value = dict[name]
-        if isroutine(value):
-            proxy_routine = proxify_routine(value)
-            setattr(cls, name, proxy_routine)
     # instantiate proxy cls
     result = cls()
     # bind elt to proxy
@@ -319,20 +332,20 @@ def proxify_routine(routine, impl=None):
     return result
 
 
-def get_proxy(elt, bases=None, dict=None):
+def get_proxy(elt, bases=None, _dict=None):
     """Get proxy from an elt.
 
     :param elt: elt to proxify.
     :type elt: object or function/method
     :param bases: base types to enrich in the result cls if not None.
-    :param dict: class members to proxify if not None.
+    :param _dict: class members to proxify if not None.
     """
 
     if isroutine(elt):
         result = proxify_routine(elt)
 
     else:  # in case of object, result is a Proxy
-        result = proxify_elt(elt, bases=bases, dict=dict)
+        result = proxify_elt(elt, bases=bases, _dict=_dict)
 
     return result
 
@@ -347,5 +360,21 @@ def proxified_elt(proxy):
     if ismethod(proxy):
         proxy = proxy.__func__
     result = getattr(proxy, __PROXIFIED__, None)
+
+    return result
+
+
+def is_proxy(elt):
+    """Return True if elt is a proxy.
+
+    :param elt: elt to check such as a proxy.
+    :return: True iif elt is a proxy.
+    :rtype: bool
+    """
+
+    if ismethod(elt):
+        elt = elt.__func__
+
+    result = hasattr(elt, __PROXIFIED__)
 
     return result
