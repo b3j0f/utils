@@ -137,7 +137,7 @@ False
 Proxy
 #####
 
->> from b3j0f.utils.proxy import get_proxy, proxified_elt
+>>> from b3j0f.utils.proxy import get_proxy, proxified_elt
 >>> l = lambda: 2
 >>> proxy = get_proxy(l, lambda: 3)
 >>> proxy()
