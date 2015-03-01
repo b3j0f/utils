@@ -24,7 +24,9 @@
 # SOFTWARE.
 # --------------------------------------------------------------------
 
-__all__ = ['get_proxy', 'proxify_routine', 'proxify_elt', 'is_proxy']
+__all__ = [
+    'get_proxy', 'proxify_routine', 'proxify_elt', 'is_proxy', 'proxified_elt'
+]
 
 """Module in charge of creating proxies like the design pattern ``proxy``.
 

@@ -86,11 +86,13 @@ Examples
 Chaining
 ########
 
+>>> # add characters to a string in one line
 >>> from b3j0f.utils.chaining import Chaining, ListChaining
->>> Chaining("te") += "s" += "t" .content
+>>> Chaining("te").__iadd__("s").__iadd__("t").content
 "test"
->>> ListChaining("test", "example").upper()[-1]
-["TEST", "EXAMPLE"]
+>>> # call several strings operations on several strings and get operation results in one line
+>>> ListChaining("Test", "Example").upper().lower()[:]
+[["TEST", "EXAMPLE"], ["test", "example"]]
 
 Iterable
 ########
@@ -114,7 +116,7 @@ Path
 >>> from b3j0f.utils.path import lookup, getpath
 >>> getpath(lookup)
 "b3j0f.utils.path.lookup"
->>> getpath(lookup("b3j0f.utils.path.getpath")
+>>> getpath(lookup("b3j0f.utils.path.getpath"))
 "b3j0f.utils.path.getpath"
 
 Property
@@ -167,6 +169,7 @@ True
 Perspectives
 ------------
 
+- wait feedbacks during 6 months before passing it to a stable version.
 - Cython implementation.
 
 ChangeLog
