@@ -70,7 +70,8 @@ This library provides a set of generic tools in order to ease development of pro
 
 Provided tools are:
 
-- chaining: manage chaining of function call such as chaining execution in some javascript libraries like jquery or d3.
+- chaining: chain object methods calls in a dedicated Chaining object. Such method calls return the Chaining object itself, allowing multiple calls to object methods to be invoked
+in a concise statement.
 - iterable: tools in order to manage iterable elements.
 - path: python object path resolver, from object to absolute/relative path or the inverse.
 - property: (un)bind/find properties in reflective and oop concerns.
@@ -88,8 +89,10 @@ Chaining
 
 >>> # add characters to a string in one line
 >>> from b3j0f.utils.chaining import Chaining, ListChaining
->>> Chaining("te").__iadd__("s").__iadd__("t").content
-"test"
+>>> c = Chaining("te").__iadd__("s").__iadd__("t")
+>>> # display content of Chaining
+>>> c._
+test
 >>> # call several strings operations on several strings and get operation results in one line
 >>> ListChaining("Test", "Example").upper().lower()[:]
 [["TEST", "EXAMPLE"], ["test", "example"]]

@@ -26,6 +26,11 @@
 
 """
 This module aims to provide tools to chaining of calls.
+
+It is inspired from method chaining pattern in embedding objects to chain
+methods calls in a dedicated Chaining object. Such method calls return the
+Chaining object itself, allowing multiple calls to object methods to be invoked
+in a concise statement.
 """
 
 __all__ = ['Chaining', 'ListChaining']
@@ -43,35 +48,38 @@ class Chaining(object):
     :Example:
 
     >>> chaining = Chaining('example').upper().capitalize()
-    >>> chaining.content
-    'example'
-    >>> chaining += '.'
-    >>> chaining.content
-    'example.'
     >>> chaining[0]
     'EXAMPLE'
     >>> chaining[1]
     'Example'
-    >>> chaining[2]
-    'example.'
     >>> chaining[-1]
     'example.'
     >>> chaining[:]
     ['EXAMPLE', 'Example', 'example.']
+    >>> chaining._
+    'example'
+    >>> chaining.__iadd__('.').__iadd__('!')
+    >>> chaining._
+    'example.!'
+    >>> chaining[:]
+    ['EXAMPLE', 'Example', 'example.', None, None]
     """
 
-    __slots__ = ('content', '_results')
+    CONTENT = '_'  #: content attribute name
+    RESULTS = '_r'  #: chained method results attribute name
+
+    __slots__ = (CONTENT, RESULTS)
 
     def __init__(self, content):
 
         super(Chaining, self).__init__()
 
-        self.content = content
-        self._results = []
+        self._ = content
+        self._r = []
 
     def __getitem__(self, key):
 
-        return self._results[key]
+        return self._r[key]
 
     def __getattribute__(self, key):
 
@@ -80,7 +88,7 @@ class Chaining(object):
             result = super(Chaining, self).__getattribute__(key)
 
         else:  # else try to get key from self.content
-            attr = getattr(self.content, key)
+            attr = getattr(self._, key)
             # embed routine in self._processing_name method
             result = _process_function(self, attr)
 
@@ -97,7 +105,7 @@ def _process_function(chaining, routine):
 
     def processing(*args, **kwargs):
         """Execute routine with input args and kwargs and add reuslt in
-        chaining._results.
+        chaining._r.
 
         :param tuple args: routine varargs.
         :param dict kwargs: routine kwargs.
@@ -105,7 +113,7 @@ def _process_function(chaining, routine):
         :rtype: Chaining
         """
         result = routine(*args, **kwargs)
-        chaining._results.append(result)
+        chaining._r.append(result)
 
         return chaining
 
@@ -121,28 +129,28 @@ class ListChaining(Chaining):
     :Example:
 
     >>> chaining = ListChaining('example', 'test').upper().capitalize()
-    >>> chaining.content
-    ['example', 'test']
-    >>> chaining += '.'
-    >>> chaining.content
-    ['example.', 'test.']
     >>> chaining[0]
     ['EXAMPLE', 'TEST']
     >>> chaining[1]
     ['Example', 'Test']
-    >>> chaining[2]
-    ['example.', 'test.']
     >>> chaining[-1]
+    ['Example', 'Test']
+    >>> chaining._
+    ['example', 'test']
+    >>> chaining += '.'
+    >>> chaining._
     ['example.', 'test.']
+    >>> chaining[2]
+    [None, None]
     >>> chaining[:]
-    [['EXAMPLE', 'TEST'], ['Example', 'Test'], ['example.', 'test.']]
+    [['EXAMPLE', 'TEST'], ['Example', 'Test'], [None, None]]
     """
 
     __slots__ = Chaining.__slots__
 
     def __init__(self, *content):
 
-        super(ListChaining, self).__init__(content)
+        super(ListChaining, self).__init__(content=content)
 
     def __getattribute__(self, key):
 
@@ -151,7 +159,7 @@ class ListChaining(Chaining):
 
         else:
             # list of routines to execute
-            self_content = self.content
+            self_content = self._
             routines = [None] * len(self_content)
             # get routines from self.content and input key
             for index, content in enumerate(self_content):
@@ -188,7 +196,7 @@ def _process_function_list(self, routines):
                 except Exception as e:
                     result = e
             results[index] = result
-        self._results.append(results)
+        self._r.append(results)
 
         return self
 
