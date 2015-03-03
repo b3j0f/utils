@@ -73,7 +73,7 @@ def proxify_elt(elt, bases=None, _dict=None):
     :param _dict: elt class content.
     :return: proxified element.
     :raises: TypeError if elt does not implement all routines of bases and
-    _dict.
+        _dict.
     """
 
     # ensure _dict is a dictionary

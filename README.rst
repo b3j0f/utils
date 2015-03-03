@@ -1,5 +1,5 @@
-b3j0f.utils: utility tools in python projects
-=============================================
+Short description
+-----------------
 
 Common tools useful to python projects.
 
@@ -58,8 +58,7 @@ This library provides a set of generic tools in order to ease development of pro
 
 Provided tools are:
 
-- chaining: chain object methods calls in a dedicated Chaining object. Such method calls return the Chaining object itself, allowing multiple calls to object methods to be invoked
-in a concise statement.
+- chaining: chain object methods calls in a dedicated Chaining object. Such method calls return the Chaining object itself, allowing multiple calls to object methods to be invoked in a concise statement.
 - iterable: tools in order to manage iterable elements.
 - path: python object path resolver, from object to absolute/relative path or the inverse.
 - property: (un)bind/find properties in reflective and oop concerns.
@@ -107,7 +106,7 @@ Path
 >>> from b3j0f.utils.path import lookup, getpath
 >>> getpath(lookup)
 "b3j0f.utils.path.lookup"
->>> getpath(lookup("b3j0f.utils.path.getpath")
+>>> getpath(lookup("b3j0f.utils.path.getpath"))
 "b3j0f.utils.path.getpath"
 
 Property
@@ -160,6 +159,7 @@ True
 Perspectives
 ------------
 
+- wait feedbacks during 6 months before passing it to a stable version.
 - Cython implementation.
 
 ChangeLog
