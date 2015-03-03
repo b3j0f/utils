@@ -1,6 +1,3 @@
-Short description
------------------
-
 Common tools useful to python projects.
 
 .. image:: https://pypip.in/license/b3j0f.utils/badge.svg
