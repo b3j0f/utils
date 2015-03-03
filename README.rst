@@ -1,3 +1,6 @@
+Description
+-----------
+
 Common tools useful to python projects.
 
 .. image:: https://pypip.in/license/b3j0f.utils/badge.svg
@@ -48,8 +51,8 @@ Installation
 
 pip install b3j0f.utils
 
-Description
------------
+Features
+--------
 
 This library provides a set of generic tools in order to ease development of projects in python >= 2.6.
 
