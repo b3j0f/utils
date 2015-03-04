@@ -44,7 +44,7 @@ keywords = [
 
 setup(
     name="b3j0f.utils",
-    version="0.8.5",
+    version="0.8.6",
     packages=find_packages(exclude=['test.*', '*.test.*']),
     author="b3j0f",
     author_email="jlabejof@yahoo.fr",
