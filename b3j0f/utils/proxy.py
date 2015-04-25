@@ -77,7 +77,10 @@ def proxify_elt(elt, bases=None, _dict=None):
     """
 
     # ensure _dict is a dictionary
-    _dict = {} if _dict is None else _dict.copy()
+    proxy_dict = {} if _dict is None else _dict.copy()
+    # set of proxified attribute names which are proxified during bases parsing
+    # and avoid to proxify them twice during _dict parsing
+    proxified_attribute_names = set()
     # ensure bases is a tuple of types
     if bases is None:
         bases = ()
@@ -85,7 +88,7 @@ def proxify_elt(elt, bases=None, _dict=None):
         bases = (lookup(bases),)
     elif isclass(bases):
         bases = (bases,)
-    else:  # fill _dict with routines of bases
+    else:  # fill proxy_dict with routines of bases
         bases = tuple(bases)
         for base in bases:
             for name, member in getmembers(base, lambda m: isroutine(m)):
@@ -94,11 +97,16 @@ def proxify_elt(elt, bases=None, _dict=None):
                         "Wrong elt {0}. Must implement {1} ({2}) of {3}".
                         format(elt, name, member, base)
                     )
-                if name not in _dict:
-                    _dict[name] = member
-    # proxify _dict
-    for name in _dict:
-        value = _dict[name]
+                if name in proxy_dict:
+                    proxy_routine = proxy_dict[name]
+                    routine_proxy = proxify_routine(proxy_routine)
+                    proxy_dict[name] = routine_proxy
+                    proxified_attribute_names.add(name)
+                else:
+                    proxy_dict[name] = member
+    # proxify proxy_dict
+    for name in proxy_dict:
+        value = proxy_dict[name]
         if not hasattr(elt, name):
             raise TypeError(
                 "Wrong elt {0}. Must implement {1} ({2})".format(
@@ -106,10 +114,13 @@ def proxify_elt(elt, bases=None, _dict=None):
                 )
             )
         if isroutine(value):
-            routine_proxy = proxify_routine(value)
-            _dict[name] = routine_proxy
+            # if member has not already been proxified
+            if name not in proxified_attribute_names:
+                # proxify it
+                value = proxify_routine(value)
+            proxy_dict[name] = value
     # generate a new proxy class
-    cls = type('Proxy', bases, _dict)
+    cls = type('Proxy', bases, proxy_dict)
     # delete initialization methods
     try:
         delattr(cls, '__new__')
