@@ -170,7 +170,7 @@ ChangeLog
 
 - Add proxy module.
 
-Donating
+Donation
 --------
 
 .. image:: https://cdn.rawgit.com/gratipay/gratipay-badge/2.3.0/dist/gratipay.png

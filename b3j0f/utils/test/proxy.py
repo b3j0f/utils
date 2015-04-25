@@ -45,9 +45,15 @@ class ProxyRoutineTest(UTCase):
         :param routine: routine to proxify.
         :param bool get_proxy: (private) play get_routine if True.
         """
+        # check is not proxy
+        isproxy = is_proxy(routine)
+        self.assertFalse(isproxy)
 
         # get proxy
         proxy = get_proxy(routine) if _get_proxy else proxify_routine(routine)
+        # check is proxy
+        isproxy = is_proxy(proxy)
+        self.assertTrue(isproxy)
 
         try:
             func_argspec = getargspec(routine)
@@ -107,15 +113,15 @@ class ProxyEltTest(UTCase):
         """
 
         class A(object):
-            def a(self):
+            def a(self, a):
                 pass
 
         class B:
-            def b(self):
+            def b(self, b):
                 pass
 
         class C(A, B):
-            def test(self):
+            def test(self, test):
                 pass
 
         elt = C()
@@ -126,13 +132,13 @@ class ProxyEltTest(UTCase):
         proxy = proxify_elt(elt, bases=bases, _dict=_dict)
 
         if add_bases:
-            # check if forgave bases are not proxified
+            # check if forgiven bases are not proxified
             for base in elt.__class__.__bases__[1:]:
                 self.assertNotIsInstance(proxy, base)
-            # check if gave bases are proxified
+            # check if given bases are proxified
             for base in bases:
                 self.assertIsInstance(proxy, base)
-                for name, member in getmembers(base, lambda m: isroutine(m)):
+                for name, _ in getmembers(base, lambda m: isroutine(m)):
                     elt_member = getattr(elt, name, None)
                     if hasattr(elt_member, '__func__'):
                         elt_member = elt_member.__func__
@@ -143,6 +149,10 @@ class ProxyEltTest(UTCase):
                         )
                         self.assertIs(proxified_member, elt_member)
                         if not isbuiltin(elt_member):
+                            # compare argspec
+                            elt_argspec = getargspec(elt_member)
+                            proxy_argspec = getargspec(proxy_member)
+                            self.assertEqual(elt_argspec, proxy_argspec)
                             self.assertIs(
                                 elt_member.__class__, proxy_member.__class__
                             )
