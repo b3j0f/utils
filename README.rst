@@ -35,9 +35,9 @@ Common tools useful to python projects.
    :target: https://coveralls.io/r/b3j0f/utils
    :alt: Code test coverage
 
-.. image:: https://pypip.in/d/b3j0f.utils/badge.png
-    :target: https://crate.io/packages/b3j0f.utils/
-    :alt: Number of PyPI downloads
+.. image:: https://pypip.in/download/b3j0f.utils/badge.svg?period=month
+   :target: https://pypi.python.org/pypi/b3j0f.utils/
+   :alt: Downloads
 
 Links
 -----
