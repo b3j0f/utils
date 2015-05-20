@@ -1,10 +1,10 @@
 ChangeLog
 =========
 
-0.8.8 (20/05/15)
+0.9 (20/05/15)
 ----------------
 
-- add wheels distribution package.
+- add wheel distribution package.
 
 0.8.7 (20/05/15)
 ----------------

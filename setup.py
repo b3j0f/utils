@@ -53,7 +53,7 @@ description = 'Set of tools and utilities useful in python projects'
 
 setup(
     name='b3j0f.utils',
-    version='0.8.8',
+    version='0.9',
     packages=find_packages(exclude=['test.*', '*.test.*']),
     author='b3j0f',
     author_email='jlabejof@yahoo.fr',
@@ -74,6 +74,7 @@ setup(
         "Programming Language :: Python",
         "Programming Language :: Python :: 2.6",
         "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.0",
         "Programming Language :: Python :: 3.1",
         "Programming Language :: Python :: 3.2",
