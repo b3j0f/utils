@@ -8,6 +8,13 @@ b3j0f.utils: utility tools in python projects
 =============================================
 
 .. toctree::
+   :caption: Table of Contents
+   :maxdepth: 1
+
+   index
+   changelog
+
+.. toctree::
    :hidden:
 
    sources/modules

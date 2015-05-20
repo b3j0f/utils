@@ -162,14 +162,6 @@ Perspectives
 - wait feedbacks during 6 months before passing it to a stable version.
 - Cython implementation.
 
-ChangeLog
----------
-
-0.8.5 (02/16/15)
-################
-
-- Add proxy module.
-
 Donation
 --------
 

@@ -35,8 +35,9 @@ from sys import version_info
 from platform import python_implementation
 
 __all__ = [
-    'PY3', 'PY2', 'PY26', 'PY27',
-    'PYPY', 'CPYTHON', 'JYTHON', 'IRONPYTHON', 'basestring'
+    'PY3', 'PY2', 'PY26', 'PY27',  # python versions
+    'PYPY', 'CPYTHON', 'JYTHON', 'IRONPYTHON',  # python runtime types
+    'basestring', 'getcallargs', 'OrderedDict'  # python2.7 objects
 ]
 
 PY3 = version_info[0] == 3  #: python3
@@ -56,12 +57,14 @@ else:
 # add functions and types if py26 which exist in py27 and py3.x
 if PY26:
 
-    __all__.append('getcallargs')
+    # add definition of ordereddict
+    from ordereddict import OrderedDict
 
     # add functions and classes which come from
     from inspect import getargspec, ismethod
     from sys import getdefaultencoding
 
+    # add definition of getcallargs
     def getcallargs(func, *positional, **named):
         """Get the mapping of arguments to values.
 
@@ -156,3 +159,9 @@ if PY26:
                 f_name, 'at least' if defaults else 'exactly', num_required,
                 'arguments' if num_required > 1 else 'argument', num_total))
         return arg2value
+
+else:
+
+    # add builtin objects from python2.7+
+    from collections import OrderedDict
+    from inspect import getcallargs
