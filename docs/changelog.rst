@@ -5,6 +5,10 @@ ChangeLog
 ----------------
 
 - add wheels distribution package.
+
+0.8.7 (20/05/15)
+----------------
+
 - Fix UTs.
 
 0.8.6 (20/05/15)
