@@ -42,13 +42,23 @@ keywords = [
     'common'
 ]
 
+dependencies = []
+
+# add ordereddict only if version is 2.6.x
+from sys import version_info
+if version_info[:2] == (2, 6):
+    dependencies.append('ordereddict')
+
+description = 'Set of tools and utilities useful in python projects'
+
 setup(
-    name="b3j0f.utils",
-    version="0.8.7",
+    name='b3j0f.utils',
+    version='0.8.7',
     packages=find_packages(exclude=['test.*', '*.test.*']),
-    author="b3j0f",
-    author_email="jlabejof@yahoo.fr",
-    description="Set of tools and utilities useful in python projects",
+    author='b3j0f',
+    author_email='jlabejof@yahoo.fr',
+    install_requires=dependencies,
+    description=description,
     long_description=desc,
     include_package_data=True,
     url='https://github.com/b3j0f/utils/',
