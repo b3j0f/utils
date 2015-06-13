@@ -42,18 +42,14 @@ keywords = [
     'common'
 ]
 
-dependencies = []
-
-# add ordereddict only if version is 2.6.x
-from sys import version_info
-if version_info[:2] == (2, 6):
-    dependencies.append('ordereddict')
+# add ordereddict if version for 2.6.x python version
+dependencies = ['ordereddict']
 
 description = 'Set of tools and utilities useful in python projects'
 
 setup(
     name='b3j0f.utils',
-    version='0.9.1',
+    version='0.9.2',
     packages=find_packages(exclude=['test.*', '*.test.*']),
     author='b3j0f',
     author_email='jlabejof@yahoo.fr',
