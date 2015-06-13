@@ -1,8 +1,13 @@
 ChangeLog
 =========
 
-0.9 (20/05/15)
+0.9.1 (13/06/15)
 ----------------
+
+- add shields.io badges.
+
+0.9 (20/05/15)
+--------------
 
 - add wheel distribution package.
 
