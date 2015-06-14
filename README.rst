@@ -174,5 +174,5 @@ Donation
    :alt: I'm grateful for gifts, but don't have a specific funding goal.
 
 .. _Homepage: https://github.com/b3j0f/utils
-.. _Documentation: http://pythonhosted.org/b3j0f.utils
+.. _Documentation: http://b3j0futils.readthedocs.org/en/master/
 .. _PyPI: https://pypi.python.org/pypi/b3j0f.utils/
