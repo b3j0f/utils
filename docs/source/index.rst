@@ -11,7 +11,6 @@ b3j0f.utils: Utilities for Python
    :caption: Table of Contents
    :maxdepth: 1
 
-   index
    changelog
 
 .. toctree::
