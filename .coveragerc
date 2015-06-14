@@ -2,6 +2,7 @@
 source = b3j0f
 
 [report]
+omit = */version.py
 exclude_lines =
     pragma: no cover
     except ImportError:
