@@ -1,7 +1,7 @@
 Description
 -----------
 
-Common tools useful to python projects.
+Utilities for Python.
 
 .. image:: https://img.shields.io/pypi/l/b3j0f.utils.svg
    :target: https://pypi.python.org/pypi/b3j0f.utils/
@@ -25,6 +25,10 @@ Common tools useful to python projects.
 
 .. image:: https://img.shields.io/pypi/wheel/b3j0f.utils.svg
    :target: https://travis-ci.org/b3j0f/utils
+   :alt: Download format
+
+.. image:: https://travis-ci.org/b3j0f/utils.svg?branch=develop
+   :target: https://travis-ci.org/b3j0f/utils
    :alt: Build status
 
 .. image:: https://coveralls.io/repos/b3j0f/utils/badge.png
@@ -34,6 +38,10 @@ Common tools useful to python projects.
 .. image:: https://img.shields.io/pypi/dm/b3j0f.utils.svg
    :target: https://pypi.python.org/pypi/b3j0f.utils/
    :alt: Downloads
+
+.. image:: https://readthedocs.org/projects/b3j0futils/badge/?version=develop
+   :target: https://readthedocs.org/projects/b3j0futils/?badge=develop
+   :alt: Documentation Status
 
 Links
 -----

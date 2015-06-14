@@ -1,11 +1,11 @@
 .. b3j0f.utils documentation master file, created by
-   sphinx-quickstart on Tue Oct 14 12:26:12 2014.
+   sphinx-quickstart on Sun Jun 14 17:29:14 2015.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-=============================================
-b3j0f.utils: utility tools in python projects
-=============================================
+=================================
+b3j0f.utils: Utilities for Python
+=================================
 
 .. toctree::
    :caption: Table of Contents
@@ -26,4 +26,4 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-.. include:: ../README.rst
+.. include:: ../../README.rst
