@@ -27,7 +27,7 @@ Utilities for Python.
    :target: https://travis-ci.org/b3j0f/utils
    :alt: Download format
 
-.. image:: https://travis-ci.org/b3j0f/utils.svg?branch=develop
+.. image:: https://travis-ci.org/b3j0f/utils.svg?branch=master
    :target: https://travis-ci.org/b3j0f/utils
    :alt: Build status
 
@@ -39,8 +39,8 @@ Utilities for Python.
    :target: https://pypi.python.org/pypi/b3j0f.utils/
    :alt: Downloads
 
-.. image:: https://readthedocs.org/projects/b3j0futils/badge/?version=develop
-   :target: https://readthedocs.org/projects/b3j0futils/?badge=develop
+.. image:: https://readthedocs.org/projects/b3j0futils/badge/?version=master
+   :target: https://readthedocs.org/projects/b3j0futils/?badge=master
    :alt: Documentation Status
 
 Links
