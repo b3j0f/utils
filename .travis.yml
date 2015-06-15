@@ -10,12 +10,10 @@ before_install:
   - "sh -e /etc/init.d/xvfb start"
 # command to install dependencies
 install:
-  - pip install .
-  - pip install nose coverage
   - pip install coveralls
 # command to run tests
 script:
-  - python setup.py nosetests --with-coverage --cover-package pypiview
+  - coverage run setup.py test
 # command to run after success
 after_success:
   - coveralls

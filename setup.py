@@ -29,23 +29,20 @@ from setuptools import setup, find_packages
 
 from os.path import abspath, dirname, join
 
-# get setup directory abspath
-_path = dirname(abspath(__file__))
+# get long description from setup directory abspath
+with open(join(dirname(abspath(__file__)), 'README.rst')) as f:
+    DESC = f.read()
 
-# get long description
-with open(join(_path, 'README.rst')) as f:
-    desc = f.read()
-
-keywords = [
+KEYWORDS = [
     'utils', 'chaining', 'iterable', 'tools', 'path', 'property', 'dynamic',
     'reflection', 'reflect', 'runtime', 'unittest', 'unit test', 'version',
     'common'
 ]
 
 # add ordereddict if version for 2.6.x python version
-dependencies = ['ordereddict']
+DEPENDENCIES = ['ordereddict']
 
-description = 'Set of tools and utilities useful in python projects'
+DESCRIPTION = 'Set of tools and utilities useful in python projects'
 
 setup(
     name='b3j0f.utils',
@@ -53,9 +50,9 @@ setup(
     packages=find_packages(exclude=['test.*', '*.test.*']),
     author='b3j0f',
     author_email='jlabejof@yahoo.fr',
-    install_requires=dependencies,
-    description=description,
-    long_description=desc,
+    install_requires=DEPENDENCIES,
+    description=DESCRIPTION,
+    long_description=DESC,
     include_package_data=True,
     url='https://github.com/b3j0f/utils/',
     license='MIT License',
@@ -78,5 +75,5 @@ setup(
         "Programming Language :: Python :: 3.4"
     ],
     test_suite='b3j0f',
-    keywords=keywords
+    keywords=KEYWORDS
 )
