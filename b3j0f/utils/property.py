@@ -24,8 +24,7 @@
 # SOFTWARE.
 # --------------------------------------------------------------------
 
-"""
-Library which aims to bind named properties on any element at runtime.
+"""Library which aims to bind named properties on any element at runtime.
 
 This module can bind a named property on any element but None methods.
 
@@ -565,8 +564,7 @@ def put_properties(elt, properties, ttl=None, ctx=None):
 
 
 def put(properties, ttl=None, ctx=None):
-    """
-    Decorator dedicated to put properties on an element.
+    """Decorator dedicated to put properties on an element.
     """
 
     def put_on(elt):
@@ -576,8 +574,7 @@ def put(properties, ttl=None, ctx=None):
 
 
 def del_properties(elt, keys=None, ctx=None):
-    """
-    Delete elt property.
+    """Delete elt property.
 
     :param elt: properties elt to del. Not None methods.
     :param keys: property keys to delete from elt. If empty, delete all

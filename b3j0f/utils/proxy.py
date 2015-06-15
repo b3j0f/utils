@@ -91,7 +91,7 @@ def proxify_elt(elt, bases=None, _dict=None):
     else:  # fill proxy_dict with routines of bases
         bases = tuple(bases)
         for base in bases:
-            for name, member in getmembers(base, lambda m: isroutine(m)):
+            for name, member in getmembers(base, isroutine):
                 if not hasattr(elt, name):
                     raise TypeError(
                         "Wrong elt {0}. Must implement {1} ({2}) of {3}".
@@ -153,8 +153,8 @@ def proxify_routine(routine, impl=None):
     except TypeError:
         __file__ = '<string>'
 
-    isMethod = ismethod(routine)
-    if isMethod:
+    is_method = ismethod(routine)
+    if is_method:
         function = routine.__func__
     else:
         function = routine
@@ -194,8 +194,8 @@ def proxify_routine(routine, impl=None):
     name = function.__name__
 
     # flag for lambda function
-    isLambda = __LAMBDA_NAME__ == function.__name__
-    if isLambda:
+    islambda = __LAMBDA_NAME__ == function.__name__
+    if islambda:
         name = '_{0}'.format(int(time()))
 
     # get join method for reducing concatenation time execution
@@ -204,7 +204,7 @@ def proxify_routine(routine, impl=None):
     # default indentation
     indent = '    '
 
-    if isLambda:
+    if islambda:
         newcodestr = "{0} = lambda ".format(name)
     else:
         newcodestr = "def {0}(".format(name)
@@ -225,12 +225,14 @@ def proxify_routine(routine, impl=None):
         newcodestr = join((newcodestr, "**{0}".format(kwargs)))
 
     # insert impl call
-    if isLambda:
+    if islambda:
         newcodestr = join((newcodestr, ": impl("))
     else:
-        newcodestr = join((
-            newcodestr,
-            "):\n{0}return impl(".format(indent))
+        newcodestr = join(
+            (
+                newcodestr,
+                "):\n{0}return impl(".format(indent)
+            )
         )
 
     if args:
@@ -266,7 +268,7 @@ def proxify_routine(routine, impl=None):
     if PY3:
         newcode = list(newco.co_code)
     else:
-        newcode = map(ord, newco.co_code)
+        newcode = [ord(co) for co in newco.co_code]
 
     consts_values = {'impl': impl}
 
@@ -290,7 +292,7 @@ def proxify_routine(routine, impl=None):
         index += 1
 
     # get code string
-    codestr = bytes(newcode) if PY3 else join(map(chr, newcode))
+    codestr = bytes(newcode) if PY3 else join([chr(co) for co in newcode])
 
     # get vargs
     vargs = [
@@ -336,7 +338,7 @@ def proxify_routine(routine, impl=None):
     # set proxyfied element on proxy
     setattr(result, __PROXIFIED__, routine)
 
-    if isMethod:  # create a new method
+    if is_method:  # create a new method
         args = [result, routine.__self__]
         if PY2:
             args.append(routine.im_class)

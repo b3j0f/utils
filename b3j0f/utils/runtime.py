@@ -24,8 +24,7 @@
 # SOFTWARE.
 # --------------------------------------------------------------------
 
-"""
-Code from http://code.activestate.com/recipes/277940-decorator-for-\
+"""Code from http://code.activestate.com/recipes/277940-decorator-for-\
 bindingconstants-at-compile-time/
 
 Decorator for automatic code optimization.
@@ -45,10 +44,6 @@ Modifications:
 from opcode import opmap, HAVE_ARGUMENT, EXTENDED_ARG
 
 from types import FunctionType, ModuleType
-try:
-    from types import ClassType
-except ImportError:
-    ClassType = type
 
 try:
     import __builtin__
@@ -85,12 +80,12 @@ def _make_constants(f, builtin_only=False, stoplist=[], verbose=None):
     result = f
 
     try:
-        co = f.__code__
+        fcode = f.__code__
     except AttributeError:
         return f        # Jython doesn't have a __code__ attribute.
-    newcode = list(co.co_code) if PY3 else map(ord, co.co_code)
-    newconsts = list(co.co_consts)
-    names = co.co_names
+    newcode = list(fcode.co_code) if PY3 else [ord(co) for co in fcode.co_code]
+    newconsts = list(fcode.co_consts)
+    names = fcode.co_names
     codelen = len(newcode)
 
     env = vars(__builtin__).copy()
@@ -109,11 +104,11 @@ def _make_constants(f, builtin_only=False, stoplist=[], verbose=None):
             return f    # for simplicity, only optimize common cases
         if opcode == LOAD_GLOBAL:
             oparg = newcode[i + 1] + (newcode[i + 2] << 8)
-            name = co.co_names[oparg]
+            name = fcode.co_names[oparg]
             if name in env and name not in stoplist:
                 value = env[name]
-                for pos, v in enumerate(newconsts):
-                    if v is value:
+                for pos, val in enumerate(newconsts):
+                    if val is value:
                         break
                 else:
                     pos = len(newconsts)
@@ -170,11 +165,11 @@ def _make_constants(f, builtin_only=False, stoplist=[], verbose=None):
         newcode[i - reljump + 1] = (reljump - 3) & 0xFF
         newcode[i - reljump + 2] = (reljump - 3) >> 8
 
-        n = len(newconsts)
+        nclen = len(newconsts)
         newconsts.append(value)
         newcode[i] = LOAD_CONST
-        newcode[i + 1] = n & 0xFF
-        newcode[i + 2] = n >> 8
+        newcode[i + 1] = nclen & 0xFF
+        newcode[i + 2] = nclen >> 8
         i += 3
         changed = True
         if verbose is not None:
@@ -182,20 +177,23 @@ def _make_constants(f, builtin_only=False, stoplist=[], verbose=None):
 
     if changed:
 
-        codestr = bytes(newcode) if PY3 else ''.join(map(chr, newcode))
+        codestr = bytes(newcode) if PY3 else ''.join(
+            [chr(co) for co in newcode]
+        )
         vargs = [
-            co.co_argcount, co.co_nlocals, co.co_stacksize,
-            co.co_flags, codestr, tuple(newconsts), co.co_names,
-            co.co_varnames, co.co_filename, co.co_name,
-            co.co_firstlineno, co.co_lnotab, co.co_freevars,
-            co.co_cellvars
+            fcode.co_argcount, fcode.co_nlocals, fcode.co_stacksize,
+            fcode.co_flags, codestr, tuple(newconsts), fcode.co_names,
+            fcode.co_varnames, fcode.co_filename, fcode.co_name,
+            fcode.co_firstlineno, fcode.co_lnotab, fcode.co_freevars,
+            fcode.co_cellvars
         ]
         if PY3:
-            vargs.insert(1, co.co_kwonlyargcount)
+            vargs.insert(1, fcode.co_kwonlyargcount)
 
-        codeobj = type(co)(*vargs)
-        result = type(f)(codeobj, f.__globals__, f.__name__, f.__defaults__,
-                    f.__closure__)
+        codeobj = type(fcode)(*vargs)
+        result = type(f)(
+            codeobj, f.__globals__, f.__name__, f.__defaults__, f.__closure__
+        )
 
         # set f attributes to result
         for prop in WRAPPER_ASSIGNMENTS:
@@ -211,55 +209,51 @@ def _make_constants(f, builtin_only=False, stoplist=[], verbose=None):
 _make_constants = _make_constants(_make_constants)  # optimize thyself!
 
 
-def bind_all(mc, builtin_only=False, stoplist=[], verbose=None):
+def bind_all(morc, builtin_only=False, stoplist=None, verbose=None):
     """Recursively apply constant binding to functions in a module or class.
 
     Use as the last line of the module (after everything is defined, but
     before test code). In modules that need modifiable globals, set
     builtin_only to True.
 
-    :param mc: module or class to transform.
+    :param morc: module or class to transform.
     :param bool builtin_only: only transform builtin objects.
     :param list stoplist: attribute names to not transform.
     :param function verbose: logger function which takes in parameter a message
     """
 
-    def _bind_all(mc, builtin_only=False, stoplist=[], verbose=False):
+    if stoplist is None:
+        stoplist = []
 
-        if isinstance(mc, (ModuleType, type)):
-            for k, v in list(vars(mc).items()):
-                if type(v) is FunctionType:
-                    newv = _make_constants(v, builtin_only, stoplist, verbose)
-                    setattr(mc, k, newv)
-                elif isinstance(v, type):
-                    _bind_all(v, builtin_only, stoplist, verbose)
+    def _bind_all(morc, builtin_only=False, stoplist=None, verbose=False):
+        """Internal bind all decorator function.
+        """
+        if stoplist is None:
+            stoplist = []
 
-    if isinstance(mc, dict):  # allow: bind_all(globals())
-        for k, v in list(mc.items()):
-            if type(v) is FunctionType:
-                newv = _make_constants(v, builtin_only, stoplist, verbose)
-                mc[k] = newv
-            elif isinstance(v, type):
-                _bind_all(v, builtin_only, stoplist, verbose)
+        if isinstance(morc, (ModuleType, type)):
+            for k, val in list(vars(morc).items()):
+                if isinstance(val, FunctionType):
+                    newv = _make_constants(
+                        val, builtin_only, stoplist, verbose
+                    )
+                    setattr(morc, k, newv)
+                elif isinstance(val, type):
+                    _bind_all(val, builtin_only, stoplist, verbose)
+
+    if isinstance(morc, dict):  # allow: bind_all(globals())
+        for k, val in list(morc.items()):
+            if isinstance(val, FunctionType):
+                newv = _make_constants(val, builtin_only, stoplist, verbose)
+                morc[k] = newv
+            elif isinstance(val, type):
+                _bind_all(val, builtin_only, stoplist, verbose)
     else:
-        _bind_all(mc, builtin_only, stoplist, verbose)
-
-    """
-    try:
-        d = vars(mc)
-    except TypeError:
-        return
-    for k, v in d.items():
-        if type(v) is FunctionType:
-            newv = _make_constants(v, builtin_only, stoplist, verbose)
-            setattr(mc, k, newv)
-        elif type(v) in (type, ClassType):
-            bind_all(v, builtin_only, stoplist, verbose)
-    """
+        _bind_all(morc, builtin_only, stoplist, verbose)
 
 
 @_make_constants
-def make_constants(builtin_only=False, stoplist=[], verbose=None):
+def make_constants(builtin_only=False, stoplist=None, verbose=None):
     """Return a decorator for optimizing global references.
 
     Replaces global references with their currently defined values.
@@ -274,6 +268,9 @@ def make_constants(builtin_only=False, stoplist=[], verbose=None):
     :param function verbose: logger function which takes in parameter a message
     """
 
-    if type(builtin_only) == type(make_constants):
+    if stoplist is None:
+        stoplist = []
+
+    if isinstance(builtin_only, type(make_constants)):
         raise ValueError("The bind_constants decorator must have arguments.")
     return lambda f: _make_constants(f, builtin_only, stoplist, verbose)

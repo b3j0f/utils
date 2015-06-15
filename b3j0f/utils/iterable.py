@@ -24,8 +24,7 @@
 # SOFTWARE.
 # --------------------------------------------------------------------
 
-"""
-Provides tools to manage iterable types
+"""Provides tools to manage iterable types
 """
 
 __all__ = ['isiterable', 'ensureiterable', 'first']

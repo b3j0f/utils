@@ -24,19 +24,13 @@
 # SOFTWARE.
 # --------------------------------------------------------------------
 
-"""
-Python reflection tools.
+"""Python reflection tools.
 """
 
 from b3j0f.utils.version import PY2
 from b3j0f.utils.iterable import ensureiterable
 
 from inspect import isclass, isroutine, ismethod, getmodule
-
-try:
-    from types import NoneType
-except ImportError:
-    NoneType = type(None)
 
 __all__ = ['base_elts', 'find_embedding', 'is_inherited']
 
@@ -197,17 +191,14 @@ def find_embedding(elt, embedding=None):
 
                     else:
 
-                        try:  # get embedded module
-                            embedded_module = getmodule(embedded)
-                        except Exception:
-                            pass
-                        else:
-                            # and compare it with elt module
-                            if embedded_module is module:
-                                # add embedded to compounds
-                                compounds.append(embedded)
-                                # end the second loop
-                                break
+                        # get embedded module
+                        embedded_module = getmodule(embedded)
+                        # and compare it with elt module
+                        if embedded_module is module:
+                            # add embedded to compounds
+                            compounds.append(embedded)
+                            # end the second loop
+                            break
 
                 else:
                     # remove last element if no coumpound element is found

@@ -24,17 +24,33 @@
 # SOFTWARE.
 # --------------------------------------------------------------------
 
-"""
-Unit tests tools.
+"""Unit tests tools.
 """
 
 from unittest import TestCase
 
-from b3j0f.utils.version import PY26, PY27, PY3
+from b3j0f.utils.version import PY2, PY26
 
 from re import match
 
 __all__ = ['UTCase']
+
+
+def _subset(subset, superset):
+    """True if subset is a subset of superset.
+
+    :param dict subset: subset to compare.
+    :param dict superset: superset to compare.
+    :return: True iif all pairs (key, value) of subset are in superset.
+    :rtype: bool
+    """
+
+    result = True
+    for k in subset:
+        result = k in superset and subset[k] == superset[k]
+        if not result:
+            break
+    return result
 
 
 class UTCase(TestCase):
@@ -45,80 +61,86 @@ class UTCase(TestCase):
 
         super(UTCase, self).__init__(*args, **kwargs)
 
-        if PY26:  # if python version is 2.6
-            self.assertIs = lambda first, second, msg=None: self.assertTrue(
-                first is second, msg=msg)
-            self.assertIsNot = lambda first, second, msg=None: self.assertTrue(
-                first is not second, msg=msg)
-            self.assertIn = lambda first, second, msg=None: self.assertTrue(
-                first in second, msg=msg)
-            self.assertNotIn = lambda first, second, msg=None: self.assertTrue(
-                first not in second, msg=msg)
-            self.assertIsNone = lambda expr, msg=None: self.assertTrue(
-                expr is None, msg=msg)
-            self.assertIsNotNone = lambda expr, msg=None: self.assertFalse(
-                expr is None, msg=msg)
-            self.assertIsInstance = lambda obj, cls, msg=None: self.assertTrue(
-                isinstance(obj, cls), msg=msg)
-            self.assertNotIsInstance = lambda obj, cls, msg=None: \
-                self.assertTrue(not isinstance(obj, cls), msg=msg)
-            self.assertGreater = lambda first, second, msg=None: \
-                self.assertTrue(first > second, msg=msg)
-            self.assertGreaterEqual = lambda first, second, msg=None: \
-                self.assertTrue(first >= second, msg=msg)
-            self.assertLess = lambda first, second, msg=None: self.assertTrue(
-                first < second, msg=msg)
-            self.assertLessEqual = lambda first, second, msg=None: \
-                self.assertTrue(first <= second, msg=msg)
-            self.assertRegexpMatches = lambda text, regexp, msg=None: \
-                self.assertTrue(
-                    match(regexp, text)
-                        if isinstance(regexp, str) else regexp.search(text),
+    if PY2:  # python 3 compatibility
+
+        if PY26:  # python 2.7 compatibility
+
+            def assertIs(self, first, second, msg=None):
+                return self.assertTrue(first is second, msg=msg)
+
+            def assertIsNot(self, first, second, msg=None):
+                return self.assertTrue(first is not second, msg=msg)
+
+            def assertIn(self, first, second, msg=None):
+                return self.assertTrue(first in second, msg=msg)
+
+            def assertNotIn(self, first, second, msg=None):
+                return self.assertTrue(first not in second, msg=msg)
+
+            def assertIsNone(self, expr, msg=None):
+                return self.assertTrue(expr is None, msg=msg)
+
+            def assertIsNotNone(self, expr, msg=None):
+                return self.assertFalse(expr is None, msg=msg)
+
+            def assertIsInstance(self, obj, cls, msg=None):
+                return self.assertTrue(isinstance(obj, cls), msg=msg)
+
+            def assertNotIsInstance(self, obj, cls, msg=None):
+                return self.assertTrue(not isinstance(obj, cls), msg=msg)
+
+            def assertGreater(self, first, second, msg=None):
+                return self.assertTrue(first > second, msg=msg)
+
+            def assertGreaterEqual(self, first, second, msg=None):
+                return self.assertTrue(first >= second, msg=msg)
+
+            def assertLess(self, first, second, msg=None):
+                self.assertTrue(first < second, msg=msg)
+
+            def assertLessEqual(self, first, second, msg=None):
+                return self.assertTrue(first <= second, msg=msg)
+
+            def assertRegexpMatches(self, text, regexp, msg=None):
+                return self.assertTrue(
+                    match(regexp, text) if isinstance(regexp, str)
+                    else regexp.search(text),
                     msg=msg
                 )
-            # python 3 compatibility
-            self.assertRegex = self.assertRegexpMatches
-            self.assertNotRegexpMatches = lambda text, regexp, msg=None: \
-                self.assertIsNone(
-                    match(regexp, text)
-                        if isinstance(regexp, str) else regexp.search(text),
+
+            def assertNotRegexpMatches(self, text, regexp, msg=None):
+                return self.assertIsNone(
+                    match(regexp, text) if isinstance(regexp, str)
+                    else regexp.search(text),
                     msg=msg
                 )
-            # python 3 compatibility
-            self.assertNotRegex = self.assertNotRegexpMatches
-            self.assertItemsEqual = lambda actual, expected, msg=None: \
-                self.assertEqual(sorted(actual), sorted(expected), msg=msg)
 
-            def subset(a, b):
-                result = True
-                for k in a:
-                    result = k in b and a[k] == b[k]
-                    if not result:
-                        break
-                return result
-            self.assertDictContainsSubset = lambda expected, actual, msg=None:\
-                self.assertTrue(subset(expected, actual), msg=msg)
-            self.assertCountEqual = lambda first, second, msg=None: \
-                self.assertEqual(len(first), len(second), msg=msg)
+            def assertItemsEqual(self, actual, expected, msg=None):
+                return self.assertEqual(
+                    sorted(actual), sorted(expected), msg=msg
+                )
 
-        elif PY27:
-            # python 3 compatibility
-            self.assertRegex = self.assertRegexpMatches
-            self.assertNotRegex = self.assertNotRegexpMatches
+            def assertDictContainsSubset(self, expected, actual, msg=None):
+                return self.assertTrue(_subset(expected, actual), msg=msg)
 
-        elif PY3:
-            #python 2 compatibility
-            self.assertRegexpMatches = self.assertRegex
-            self.assertNotRegexpMatches = self.assertNotRegex
-            self.assertItemsEqual = lambda actual, expected, msg=None: \
-                self.assertEqual(sorted(actual), sorted(expected), msg=msg)
+            def assertCountEqual(self, first, second, msg=None):
+                return self.assertEqual(len(first), len(second), msg=msg)
 
-            def subset(a, b):
-                result = True
-                for k in a:
-                    result = k in b and a[k] == b[k]
-                    if not result:
-                        break
-                return result
-            self.assertDictContainsSubset = lambda expected, actual, msg=None:\
-                self.assertTrue(subset(expected, actual), msg=msg)
+        def assertRegex(self, text, regexp, msg=None):
+            return self.assertRegexpMatches(text, regexp, msg)
+
+        def assertNotRegex(self, text, regexp, msg=None):
+            return self.assertNotRegexpMatches(text, regexp, msg)
+
+    else:  # python 2 compatibility
+        def assertRegexpMatches(self, *args, **kwargs):
+            return self.assertRegex(*args, **kwargs)
+
+        def assertNotRegexpMatches(self, *args, **kwargs):
+            return self.assertNotRegex(*args, **kwargs)
+
+        def assertItemsEqual(self, actual, expected, msg=None):
+            return self.assertEqual(sorted(actual), sorted(expected), msg=msg)
+
+        def assertDictContainsSubset(self, expected, actual, msg=None):
+            return self.assertTrue(_subset(expected, actual), msg=msg)

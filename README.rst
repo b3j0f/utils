@@ -43,6 +43,9 @@ Utilities for Python.
    :target: https://readthedocs.org/projects/b3j0futils/?badge=master
    :alt: Documentation Status
 
+.. image:: https://img.shields.io/badge/code quality-8.28-green.svg
+   :alt: Pylint code quality
+
 Links
 -----
 

@@ -24,8 +24,7 @@
 # SOFTWARE.
 # --------------------------------------------------------------------
 
-"""
-Tools for managing path resolution of python objects.
+"""Tools for managing path resolution of python objects.
 """
 
 # ensure str are unicodes
@@ -94,25 +93,20 @@ def incache(path):
     True
     """
 
-    global __LOOKUP_CACHE
-
     return path in __LOOKUP_CACHE
 
 
 def lookup(path, cache=True):
     """Get element reference from input element.
 
-    :limitations: it does not resolve class methods
-        or static values such as True, False, numbers, string and keywords.
-
+    :limitations: it does not resolve class methods or static values such as
+        True, False, numbers, string and keywords.
     :param str path: full path to a python element.
     :param bool cache: if True (default), permits to reduce time complexity for
         lookup resolution in using cache memory to save resolved elements.
-
     :return: python object which is accessible through input path
         or raise an exception if the path is wrong.
     :rtype: object
-
     :raises ImportError: if path is wrong
     """
 
@@ -158,7 +152,6 @@ def lookup(path, cache=True):
                 # try to import all sub-modules/packages
                 try:  # check if name is defined from an external module
                     # find the right module
-
                     while index < components_len:
                         module_name = '{0}.{1}'.format(
                             module_name, components[index]
@@ -182,7 +175,6 @@ def lookup(path, cache=True):
                             )
                         )
                 else:  # in case of PY26
-
                     if PY26:
                         index = 1
                         while index < components_len:

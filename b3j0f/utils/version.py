@@ -24,8 +24,7 @@
 # SOFTWARE.
 # --------------------------------------------------------------------
 
-"""
-Module which provides variables and constants in order to ease developments
+"""Module which provides variables and constants in order to ease developments
 among several python versions and platforms.
 """
 
@@ -126,8 +125,7 @@ if PY26:
         elif num_args == 0 and num_total:
             if varkw:
                 if num_pos:
-                    # XXX: We should use num_pos, but Python also uses
-                    # num_total:
+                    # We should use num_pos, but Python also uses num_total:
                     raise TypeError('%s() takes exactly 0 arguments '
                                     '(%d given)' % (f_name, num_total))
             else:

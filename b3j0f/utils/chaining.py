@@ -24,8 +24,7 @@
 # SOFTWARE.
 # --------------------------------------------------------------------
 
-"""
-This module aims to provide tools to chaining of calls.
+"""This module aims to provide tools to chaining of calls.
 
 It is inspired from method chaining pattern in embedding objects to chain
 methods calls in a dedicated Chaining object. Such method calls return the
@@ -66,7 +65,7 @@ class Chaining(object):
     """
 
     CONTENT = '_'  #: content attribute name
-    RESULTS = '_r'  #: chained method results attribute name
+    RESULTS = '___'  #: chained method results attribute name
 
     __slots__ = (CONTENT, RESULTS)
 
@@ -75,11 +74,11 @@ class Chaining(object):
         super(Chaining, self).__init__()
 
         self._ = content
-        self._r = []
+        self.___ = []
 
     def __getitem__(self, key):
 
-        return self._r[key]
+        return self.___[key]
 
     def __getattribute__(self, key):
 
@@ -96,8 +95,7 @@ class Chaining(object):
 
 
 def _process_function(chaining, routine):
-    """
-    Chain function which returns a function.
+    """Chain function which returns a function.
 
     :param routine: routine to process.
     :return: routine embedding execution function.
@@ -105,15 +103,16 @@ def _process_function(chaining, routine):
 
     def processing(*args, **kwargs):
         """Execute routine with input args and kwargs and add reuslt in
-        chaining._r.
+        chaining.___.
 
         :param tuple args: routine varargs.
         :param dict kwargs: routine kwargs.
         :return: chaining chaining.
         :rtype: Chaining
         """
+
         result = routine(*args, **kwargs)
-        chaining._r.append(result)
+        chaining.___.append(result)
 
         return chaining
 
@@ -166,9 +165,9 @@ class ListChaining(Chaining):
                 routine = None
                 try:
                     routine = getattr(content, key)
-                except Exception as e:
+                except AttributeError as excp:
                     # in case of exception, routine is the exception
-                    routine = e
+                    routine = excp
                 # in all cases, put routine in routines
                 routines[index] = routine
             result = _process_function_list(self, routines)
@@ -185,7 +184,14 @@ def _process_function_list(self, routines):
     """
 
     def processing(*args, **kwargs):
+        """Execute routines with input args and kwargs and add reuslt in
+        chaining.___.
 
+        :param tuple args: routine varargs.
+        :param dict kwargs: routine kwargs.
+        :return: chaining chaining.
+        :rtype: Chaining
+        """
         results = [None] * len(routines)
         for index, routine in enumerate(routines):
             if isinstance(routine, Exception):
@@ -193,10 +199,10 @@ def _process_function_list(self, routines):
             else:
                 try:
                     result = routine(*args, **kwargs)
-                except Exception as e:
-                    result = e
+                except AttributeError as excp:
+                    result = excp
             results[index] = result
-        self._r.append(results)
+        self.___.append(results)
 
         return self
 
