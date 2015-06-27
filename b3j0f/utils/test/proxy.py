@@ -203,6 +203,28 @@ class ProxyEltTest(UTCase):
 
         self._assert_elt(add_bases=True, add_dict=True)
 
+    def test__getproxy__(self):
+        """Test the __getproxy__ instance method.
+        """
+
+        testproxy = 'test'
+
+        class Test(object):
+            """Test class.
+            """
+            def __getproxy__(self):
+                """Specific get_proxy function to use in order to proxify a
+                Test instance.
+                """
+
+                return testproxy
+
+        test = Test()
+
+        proxy = get_proxy(elt=test)
+
+        self.assertEqual(proxy, testproxy)
+
 
 if __name__ == '__main__':
     main()

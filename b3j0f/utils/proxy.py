@@ -63,6 +63,8 @@ __LAMBDA_NAME__ = (lambda: None).__name__
 __PROXY_CLASS__ = 'Proxy'
 #: attribute name for proxified element
 __PROXIFIED__ = '__proxified__'
+#: instance method name for delegating proxy generation to the elt to proxify
+__GETPROXY__ = '__getproxy__'
 
 
 def proxify_elt(elt, bases=None, _dict=None):
@@ -148,11 +150,6 @@ def proxify_routine(routine, impl=None):
     # init impl
     impl = routine if impl is None else impl
 
-    try:
-        __file__ = getfile(routine)
-    except TypeError:
-        __file__ = '<string>'
-
     is_method = ismethod(routine)
     if is_method:
         function = routine.__func__
@@ -184,138 +181,20 @@ def proxify_routine(routine, impl=None):
                 updated.append(wrapper_update)
 
         @wraps(function, assigned=assigned, updated=updated)
-        def function(*args, **kwargs):
-            pass
+        def wrappedfunction(*args, **kwargs):
+            """Default wrap function.
+            """
+        function = wrappedfunction
+        # get params from function
+        args, varargs, kwargs, _ = getargspec(function)
 
-    # get params from routine wrapper
-    args, varargs, kwargs, _ = getargspec(function)
-
-    # get params from routine
     name = function.__name__
 
-    # flag for lambda function
-    islambda = __LAMBDA_NAME__ == function.__name__
-    if islambda:
-        name = '_{0}'.format(int(time()))
+    result = _compilecode(
+        function=function, name=name, impl=impl,
+        args=args, varargs=varargs, kwargs=kwargs
+    )
 
-    # get join method for reducing concatenation time execution
-    join = "".join
-
-    # default indentation
-    indent = '    '
-
-    if islambda:
-        newcodestr = "{0} = lambda ".format(name)
-    else:
-        newcodestr = "def {0}(".format(name)
-
-    if args:
-        newcodestr = join((newcodestr, "{0}".format(args[0])))
-    for arg in args[1:]:
-        newcodestr = join((newcodestr, ", {0}".format(arg)))
-
-    if varargs is not None:
-        if args:
-            newcodestr = join((newcodestr, ", "))
-        newcodestr = join((newcodestr, "*{0}".format(varargs)))
-
-    if kwargs is not None:
-        if args or varargs is not None:
-            newcodestr = join((newcodestr, ", "))
-        newcodestr = join((newcodestr, "**{0}".format(kwargs)))
-
-    # insert impl call
-    if islambda:
-        newcodestr = join((newcodestr, ": impl("))
-    else:
-        newcodestr = join(
-            (
-                newcodestr,
-                "):\n{0}return impl(".format(indent)
-            )
-        )
-
-    if args:
-        newcodestr = join((newcodestr, "{0}".format(args[0])))
-    for arg in args[1:]:
-        newcodestr = join((newcodestr, ", {0}".format(arg)))
-
-    if varargs is not None:
-        if args:
-            newcodestr = join((newcodestr, ", "))
-        newcodestr = join((newcodestr, "*{0}".format(varargs)))
-
-    if kwargs is not None:
-        if args or varargs is not None:
-            newcodestr = join((newcodestr, ", "))
-        newcodestr = join((newcodestr, "**{0}".format(kwargs)))
-
-    newcodestr = join((newcodestr, ")\n"))
-
-    # compile newcodestr
-    code = compile(newcodestr, __file__, 'single')
-
-    # define the code with the new function
-    _globals = {}
-    exec(code, _globals)
-
-    # get new code
-    newco = _globals[name].__code__
-
-    # get new consts list
-    newconsts = list(newco.co_consts)
-
-    if PY3:
-        newcode = list(newco.co_code)
-    else:
-        newcode = [ord(co) for co in newco.co_code]
-
-    consts_values = {'impl': impl}
-
-    # change LOAD_GLOBAL to LOAD_CONST
-    index = 0
-    newcodelen = len(newcode)
-    while index < newcodelen:
-        if newcode[index] == LOAD_GLOBAL:
-            oparg = newcode[index + 1] + (newcode[index + 2] << 8)
-            name = newco.co_names[oparg]
-            if name in consts_values:
-                const_value = consts_values[name]
-                if const_value in newconsts:
-                    pos = newconsts.index(const_value)
-                else:
-                    pos = len(newconsts)
-                    newconsts.append(consts_values[name])
-                newcode[index] = LOAD_CONST
-                newcode[index + 1] = pos & 0xFF
-                newcode[index + 2] = pos >> 8
-        index += 1
-
-    # get code string
-    codestr = bytes(newcode) if PY3 else join([chr(co) for co in newcode])
-
-    # get vargs
-    vargs = [
-        newco.co_argcount, newco.co_nlocals, newco.co_stacksize,
-        newco.co_flags, codestr, tuple(newconsts), newco.co_names,
-        newco.co_varnames, newco.co_filename, newco.co_name,
-        newco.co_firstlineno, newco.co_lnotab,
-        function.__code__.co_freevars,
-        newco.co_cellvars
-    ]
-    if PY3:
-        vargs.insert(1, newco.co_kwonlyargcount)
-
-    # instanciate a new code object
-    codeobj = type(newco)(*vargs)
-    # instanciate a new function
-    if function is None or isbuiltin(function):
-        result = FunctionType(codeobj, {})
-    else:
-        result = type(function)(
-            codeobj, function.__globals__, function.__name__,
-            function.__defaults__, function.__closure__
-        )
     # set wrapping assignments
     for wrapper_assignment in WRAPPER_ASSIGNMENTS:
         try:
@@ -347,8 +226,166 @@ def proxify_routine(routine, impl=None):
     return result
 
 
+def _compilecode(function, name, impl, args, varargs, kwargs):
+    """Get generated code.
+
+    :return: function proxy generated code.
+    :rtype: str
+    """
+
+    newcodestr, generatedname = _generatecode(
+        function=function, name=name, impl=impl,
+        args=args, varargs=varargs, kwargs=kwargs
+    )
+
+    try:
+        __file__ = getfile(function)
+    except TypeError:
+        __file__ = '<string>'
+
+    # compile newcodestr
+    code = compile(newcodestr, __file__, 'single')
+
+    # define the code with the new function
+    _globals = {}
+    exec(code, _globals)
+
+    # get new code
+    newco = _globals[generatedname].__code__
+
+    # get new consts list
+    newconsts = list(newco.co_consts)
+
+    if PY3:
+        newcode = list(newco.co_code)
+    else:
+        newcode = [ord(co) for co in newco.co_code]
+
+    consts_values = {'impl': impl}
+
+    # change LOAD_GLOBAL to LOAD_CONST
+    index = 0
+    newcodelen = len(newcode)
+    while index < newcodelen:
+        if newcode[index] == LOAD_GLOBAL:
+            oparg = newcode[index + 1] + (newcode[index + 2] << 8)
+            name = newco.co_names[oparg]
+            if name in consts_values:
+                const_value = consts_values[name]
+                if const_value in newconsts:
+                    pos = newconsts.index(const_value)
+                else:
+                    pos = len(newconsts)
+                    newconsts.append(consts_values[name])
+                newcode[index] = LOAD_CONST
+                newcode[index + 1] = pos & 0xFF
+                newcode[index + 2] = pos >> 8
+        index += 1
+
+    # get code string
+    codestr = bytes(newcode) if PY3 else "".join([chr(co) for co in newcode])
+
+    # get vargs
+    vargs = [
+        newco.co_argcount, newco.co_nlocals, newco.co_stacksize,
+        newco.co_flags, codestr, tuple(newconsts), newco.co_names,
+        newco.co_varnames, newco.co_filename, newco.co_name,
+        newco.co_firstlineno, newco.co_lnotab,
+        function.__code__.co_freevars,
+        newco.co_cellvars
+    ]
+    if PY3:
+        vargs.insert(1, newco.co_kwonlyargcount)
+
+    # instanciate a new code object
+    codeobj = type(newco)(*vargs)
+    # instanciate a new function
+    if function is None or isbuiltin(function):
+        result = FunctionType(codeobj, {})
+    else:
+        result = type(function)(
+            codeobj, function.__globals__, function.__name__,
+            function.__defaults__, function.__closure__
+        )
+
+    return result
+
+
+def _generatecode(function, name, impl, args, varargs, kwargs):
+
+    code = ''
+
+    # flag for lambda function
+    islambda = __LAMBDA_NAME__ == name
+    if islambda:
+        generatedname = '_{0}'.format(int(time()))
+    else:
+        generatedname = name
+
+    # get join method for reducing concatenation time execution
+    join = "".join
+
+    # default indentation
+    indent = '    '
+
+    if islambda:
+        code = "{0} = lambda ".format(generatedname)
+    else:
+        code = "def {0}(".format(generatedname)
+
+    if args:
+        code = join((code, "{0}".format(args[0])))
+    for arg in args[1:]:
+        code = join((code, ", {0}".format(arg)))
+
+    if varargs is not None:
+        if args:
+            code = join((code, ", "))
+        code = join((code, "*{0}".format(varargs)))
+
+    if kwargs is not None:
+        if args or varargs is not None:
+            code = join((code, ", "))
+        code = join((code, "**{0}".format(kwargs)))
+
+    # insert impl call
+    if islambda:
+        code = join((code, ": impl("))
+    else:
+        code = join(
+            (
+                code,
+                "):\n{0}return impl(".format(indent)
+            )
+        )
+
+    if args:
+        code = join((code, "{0}".format(args[0])))
+    for arg in args[1:]:
+        code = join((code, ", {0}".format(arg)))
+
+    if varargs is not None:
+        if args:
+            code = join((code, ", "))
+        code = join((code, "*{0}".format(varargs)))
+
+    if kwargs is not None:
+        if args or varargs is not None:
+            code = join((code, ", "))
+        code = join((code, "**{0}".format(kwargs)))
+
+    code = join((code, ")\n"))
+
+    result = code, generatedname
+
+    return result
+
+
 def get_proxy(elt, bases=None, _dict=None):
     """Get proxy from an elt.
+
+    If elt implements the proxy generator method (named ``__getproxy__``), use
+    it instead of using this module functions.
 
     :param elt: elt to proxify.
     :type elt: object or function/method
@@ -356,11 +393,19 @@ def get_proxy(elt, bases=None, _dict=None):
     :param _dict: class members to proxify if not None.
     """
 
-    if isroutine(elt):
-        result = proxify_routine(elt)
+    # try to find an instance proxy generator
+    proxygenerator = getattr(elt, __GETPROXY__, None)
 
-    else:  # in case of object, result is a Proxy
-        result = proxify_elt(elt, bases=bases, _dict=_dict)
+    # if a proxy generator is not found, use this module
+    if proxygenerator is None:
+        if isroutine(elt):
+            result = proxify_routine(elt)
+
+        else:  # in case of object, result is a Proxy
+            result = proxify_elt(elt, bases=bases, _dict=_dict)
+
+    else:  # otherwise, use the specific proxy generator
+        result = proxygenerator()
 
     return result
 

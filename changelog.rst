@@ -1,6 +1,11 @@
 ChangeLog
 =========
 
+0.9.4 (27/06/15)
+----------------
+
+- add __getproxy__ instance method name in order to specialize the generation of a proxy from the elt to proxify.
+
 0.9.3 (14/06/15)
 ----------------
 
