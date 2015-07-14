@@ -1,5 +1,5 @@
 Description
------------
+===========
 
 Utilities for Python.
 
@@ -48,19 +48,19 @@ Utilities for Python.
    :alt: Code Health
 
 Links
------
+=====
 
 - `Homepage`_
 - `PyPI`_
 - `Documentation`_
 
 Installation
-------------
+============
 
 pip install b3j0f.utils
 
 Features
---------
+========
 
 This library provides a set of generic tools in order to ease development of projects in python >= 2.6.
 
@@ -77,10 +77,10 @@ Provided tools are:
 - version: ease compatibility between python version (from 2.x to 3.x).
 
 Examples
---------
+========
 
 Chaining
-########
+--------
 
 >>> # add characters to a string in one line
 >>> from b3j0f.utils.chaining import Chaining, ListChaining
@@ -93,7 +93,7 @@ test
 [["TEST", "EXAMPLE"], ["test", "example"]]
 
 Iterable
-########
+--------
 
 >>> from b3j0f.utils.iterable import is_iterable, first
 >>> is_iterable(1)
@@ -109,7 +109,7 @@ False
 "test"
 
 Path
-####
+----
 
 >>> from b3j0f.utils.path import lookup, getpath
 >>> getpath(lookup)
@@ -118,7 +118,7 @@ Path
 "b3j0f.utils.path.getpath"
 
 Property
-########
+--------
 
 >>> from b3j0f.utils.property import put_properties, get_properties, del_properties
 >>> put_properties(min, {'test': True})
@@ -129,7 +129,7 @@ Property
 None
 
 Reflect
-#######
+-------
 
 >>> from b3j0f.utils.reflect import base_elts, is_inherited
 >>> class BaseTest(object):
@@ -147,7 +147,7 @@ True
 False
 
 Proxy
-#####
+-----
 
 >>> from b3j0f.utils.proxy import get_proxy, proxified_elt
 >>> l = lambda: 2
@@ -165,13 +165,13 @@ True
 >>> assert proxified_elt(proxy) is l
 
 Perspectives
-------------
+============
 
 - wait feedbacks during 6 months before passing it to a stable version.
 - Cython implementation.
 
 Donation
---------
+========
 
 .. image:: https://cdn.rawgit.com/gratipay/gratipay-badge/2.3.0/dist/gratipay.png
    :target: https://gratipay.com/b3j0f/

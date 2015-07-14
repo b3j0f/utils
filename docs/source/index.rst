@@ -19,7 +19,7 @@ b3j0f.utils: Utilities for Python
    sources/modules
 
 Indices and tables
-------------------
+==================
 
 * :ref:`genindex`
 * :ref:`modindex`
