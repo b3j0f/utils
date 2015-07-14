@@ -108,13 +108,16 @@ class ProxyEltTest(UTCase):
     """Test proxy elt function.
     """
 
-    def _assert_elt(self, add_bases=False, add_dict=None):
+    def _assert_elt(self, add_bases=False, add_dict=False, public=False):
         """Assert to proxify an elt.
         """
 
         class A(object):
-            def a(self, a):
+            def _protected(self):
                 pass
+
+            def a(self, a):
+                return self
 
         class B:
             def b(self, b):
@@ -126,15 +129,15 @@ class ProxyEltTest(UTCase):
 
         elt = C()
 
-        bases = (elt.__class__.__base__,) if add_bases else None
+        bases = (A,) if add_bases else ()
         _dict = {'test': lambda: None} if add_dict else None
 
-        proxy = proxify_elt(elt, bases=bases, _dict=_dict)
+        proxy = proxify_elt(elt, bases=bases, _dict=_dict, public=public)
 
         if add_bases:
+            self.assertIs(proxy.a(a=None), elt)
             # check if forgiven bases are not proxified
-            for base in elt.__class__.__bases__[1:]:
-                self.assertNotIsInstance(proxy, base)
+            self.assertNotIsInstance(proxy, B)
             # check if given bases are proxified
             for base in bases:
                 self.assertIsInstance(proxy, base)
@@ -179,11 +182,23 @@ class ProxyEltTest(UTCase):
                 )
                 self.assertIs(proxified_member, member)
 
+        # check public members
+        if public:
+            self.assertFalse(hasattr(proxy, '_protected'))
+        else:
+            self.assertTrue(not bases or hasattr(proxy, '_protected'))
+
     def test_elt(self):
         """Test to proxify an elt.
         """
 
         self._assert_elt()
+
+    def test_elt_public(self):
+        """Test to proxify an elt with only public members.
+        """
+
+        self._assert_elt(public=True)
 
     def test_elt_bases(self):
         """Test to proxify an elt with bases.

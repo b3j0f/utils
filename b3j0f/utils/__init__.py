@@ -27,5 +27,9 @@
 """b3j0f.utils package.
 """
 
+__all__ = ['__version_info__', '__version__']
+
+#: project version info
+__version_info__ = 0, 9, 5, "beta", 0
 #: project version
-__version__ = '0.9.4'
+__version__ = ".".join(str(v) for v in __version_info__[:3])

@@ -1,6 +1,12 @@
 ChangeLog
 =========
 
+0.9.5 (14/07/15)
+----------------
+
+- fix method proxy generation in the function b3j0f.utils.proxy.proxify_elt.
+- add public parameter in b3j0f.utils.proxy.proxify_elt.
+
 0.9.4 (27/06/15)
 ----------------
 

@@ -42,6 +42,10 @@ from types import MethodType, FunctionType
 
 from opcode import opmap
 
+from random import randint
+
+from sys import maxsize
+
 from inspect import (
     getmembers, isroutine, ismethod, getargspec, getfile, isbuiltin, isclass
 )
@@ -67,12 +71,14 @@ __PROXIFIED__ = '__proxified__'
 __GETPROXY__ = '__getproxy__'
 
 
-def proxify_elt(elt, bases=None, _dict=None):
-    """Proxify a class with input elt.
+def proxify_elt(elt, bases=None, _dict=None, public=False):
+    """Proxify input elt.
 
     :param elt: elt to proxify.
-    :param bases: elt class base classes.
-    :param _dict: elt class content.
+    :param bases: elt class base classes. If None, use elt type.
+    :param dict _dict: specific elt class content to use.
+    :param bool public: if True (default False), proxify only public members
+        (where name starts with the character '_').
     :return: proxified element.
     :raises: TypeError if elt does not implement all routines of bases and
         _dict.
@@ -85,33 +91,49 @@ def proxify_elt(elt, bases=None, _dict=None):
     proxified_attribute_names = set()
     # ensure bases is a tuple of types
     if bases is None:
-        bases = ()
-    elif isinstance(bases, basestring):
+        bases = (elt if isclass(elt) else type(elt),)
+    if isinstance(bases, basestring):
         bases = (lookup(bases),)
     elif isclass(bases):
         bases = (bases,)
-    else:  # fill proxy_dict with routines of bases
+    else:
         bases = tuple(bases)
-        for base in bases:
-            for name, member in getmembers(base, isroutine):
-                if not hasattr(elt, name):
-                    raise TypeError(
-                        "Wrong elt {0}. Must implement {1} ({2}) of {3}".
-                        format(elt, name, member, base)
-                    )
-                if name in proxy_dict:
-                    proxy_routine = proxy_dict[name]
-                    routine_proxy = proxify_routine(proxy_routine)
+
+    # fill proxy_dict with routines of bases
+    for base in bases:
+        # exclude object
+        if base is object:
+            continue
+        for name, member in getmembers(base, isroutine):
+            # check if name is public
+            if public and not name.startswith('_'):
+                continue
+            eltmember = getattr(elt, name, None)
+            if eltmember is None:
+                raise TypeError(
+                    'Wrong elt {0}. Must implement {1} ({2}) of {3}.'.
+                    format(elt, name, member, base)
+                )
+            # proxify member if member is not a constructor
+            if name not in ['__new__', '__init__']:
+                # get routine from proxy_dict or eltmember
+                routine = proxy_dict.get(name, eltmember)
+                # exclude object methods
+                if getattr(routine, '__objclass__', None) is not object:
+                    # get routine proxy
+                    routine_proxy = proxify_routine(routine)
+                    if ismethod(routine_proxy):
+                        routine_proxy = routine_proxy.__func__
+                    # update proxy_dict
                     proxy_dict[name] = routine_proxy
+                    # and save the proxified attribute flag
                     proxified_attribute_names.add(name)
-                else:
-                    proxy_dict[name] = member
     # proxify proxy_dict
     for name in proxy_dict:
         value = proxy_dict[name]
         if not hasattr(elt, name):
             raise TypeError(
-                "Wrong elt {0}. Must implement {1} ({2})".format(
+                'Wrong elt {0}. Must implement {1} ({2}).'.format(
                     elt, name, value
                 )
             )
@@ -121,19 +143,15 @@ def proxify_elt(elt, bases=None, _dict=None):
                 # proxify it
                 value = proxify_routine(value)
             proxy_dict[name] = value
+    # set default constructors if not present in proxy_dict
+    if '__new__' not in proxy_dict:
+        proxy_dict['__new__'] = object.__new__
+    if '__init__' not in proxy_dict:
+        proxy_dict['__init__'] = object.__init__
     # generate a new proxy class
     cls = type('Proxy', bases, proxy_dict)
-    # delete initialization methods
-    try:
-        delattr(cls, '__new__')
-    except AttributeError:
-        pass
-    try:
-        delattr(cls, '__init__')
-    except AttributeError:
-        pass
     # instantiate proxy cls
-    result = cls()
+    result = cls if isclass(elt) else cls()
     # bind elt to proxy
     setattr(result, __PROXIFIED__, elt)
 
@@ -184,6 +202,7 @@ def proxify_routine(routine, impl=None):
         def wrappedfunction(*args, **kwargs):
             """Default wrap function.
             """
+
         function = wrappedfunction
         # get params from function
         args, varargs, kwargs, _ = getargspec(function)
@@ -233,7 +252,7 @@ def _compilecode(function, name, impl, args, varargs, kwargs):
     :rtype: str
     """
 
-    newcodestr, generatedname = _generatecode(
+    newcodestr, generatedname, impl_name = _generatecode(
         function=function, name=name, impl=impl,
         args=args, varargs=varargs, kwargs=kwargs
     )
@@ -261,7 +280,7 @@ def _compilecode(function, name, impl, args, varargs, kwargs):
     else:
         newcode = [ord(co) for co in newco.co_code]
 
-    consts_values = {'impl': impl}
+    consts_values = {impl_name: impl}
 
     # change LOAD_GLOBAL to LOAD_CONST
     index = 0
@@ -329,54 +348,57 @@ def _generatecode(function, name, impl, args, varargs, kwargs):
     indent = '    '
 
     if islambda:
-        code = "{0} = lambda ".format(generatedname)
+        code = '{0} = lambda '.format(generatedname)
     else:
-        code = "def {0}(".format(generatedname)
+        code = 'def {0}('.format(generatedname)
 
     if args:
-        code = join((code, "{0}".format(args[0])))
+        code = join((code, '{0}'.format(args[0])))
     for arg in args[1:]:
-        code = join((code, ", {0}".format(arg)))
+        code = join((code, ', {0}'.format(arg)))
 
     if varargs is not None:
         if args:
-            code = join((code, ", "))
-        code = join((code, "*{0}".format(varargs)))
+            code = join((code, ', '))
+        code = join((code, '*{0}'.format(varargs)))
 
     if kwargs is not None:
         if args or varargs is not None:
-            code = join((code, ", "))
-        code = join((code, "**{0}".format(kwargs)))
+            code = join((code, ', '))
+        code = join((code, '**{0}'.format(kwargs)))
+
+    impl_name = '_{0}'.format(randint(0, maxsize))
 
     # insert impl call
     if islambda:
-        code = join((code, ": impl("))
+        code = join((code, ': {0}('.format(impl_name)))
     else:
         code = join(
             (
                 code,
-                "):\n{0}return impl(".format(indent)
+                '):\n{0}return {1}('.format(indent, impl_name)
             )
         )
 
-    if args:
-        code = join((code, "{0}".format(args[0])))
-    for arg in args[1:]:
-        code = join((code, ", {0}".format(arg)))
+    impl_args = args[1:] if ismethod(impl) else args
+    if impl_args:
+        code = join((code, '{0}'.format(impl_args[0])))
+    for arg in impl_args[1:]:
+        code = join((code, ', {0}'.format(arg)))
 
     if varargs is not None:
         if args:
-            code = join((code, ", "))
-        code = join((code, "*{0}".format(varargs)))
+            code = join((code, ', '))
+        code = join((code, '*{0}'.format(varargs)))
 
     if kwargs is not None:
         if args or varargs is not None:
-            code = join((code, ", "))
-        code = join((code, "**{0}".format(kwargs)))
+            code = join((code, ', '))
+        code = join((code, '**{0}'.format(kwargs)))
 
-    code = join((code, ")\n"))
+    code = join((code, ')\n'))
 
-    result = code, generatedname
+    result = code, generatedname, impl_name
 
     return result
 
