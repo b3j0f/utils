@@ -372,7 +372,7 @@ def _get_properties(
                 if key in elt_properties:
                     if not first or key not in _found_keys:
                         properties_to_keep[key] = elt_properties[key]
-                    if first and not key in _found_keys:
+                    if first and key not in _found_keys:
                         _found_keys.add(key)
 
         if local:  # in case of local, use properties_to_keep
