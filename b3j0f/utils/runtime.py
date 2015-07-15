@@ -64,7 +64,7 @@ JUMP_FORWARD = opmap['JUMP_FORWARD']
 WRAPPER_ASSIGNMENTS = ('__doc__', '__annotations__', '__dict__', '__module__')
 
 
-def _make_constants(f, builtin_only=False, stoplist=[], verbose=None):
+def _make_constants(f, builtin_only=False, stoplist=None, verbose=None):
     """Generate new function where code is an input function code with all
     LOAD_GLOBAL statements changed to LOAD_CONST statements.
 
@@ -78,6 +78,9 @@ def _make_constants(f, builtin_only=False, stoplist=[], verbose=None):
     """
 
     result = f
+
+    if stoplist is None:
+        stoplist = []
 
     try:
         fcode = f.__code__
