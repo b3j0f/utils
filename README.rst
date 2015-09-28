@@ -122,11 +122,24 @@ Property
 
 >>> from b3j0f.utils.property import put_properties, get_properties, del_properties
 >>> put_properties(min, {'test': True})
->>> get_properties(min)
-{'test': True}
+>>> assert get_properties(min) == {'test': True}
 >>> del_properties(min)
->>> get_properties(min)
-None
+>>> assert get_properties(min) is None
+
+>>> from b3j0f.utils.property import addproperties
+>>> def before(self, value, name):  # define a before setter
+>>>     self.before = value if hasattr(self, 'after') else None
+>>> def after(self, value, name):
+>>>     self.after = value + 2  # define a after setter
+>>> @addproperties(['test'], bfset=before, afset=after)  # add python properties
+>>> class Test(object):
+>>>     pass
+>>> assert isinstance(Test.test, property)  # assert property is bound
+>>> test = Test()
+>>> test.test = 2
+>>> assert test.update is None  # assert before setter
+>>> assert test.test == test._test == 2  # assert default setter
+>>> assert test.after == 4
 
 Reflect
 -------

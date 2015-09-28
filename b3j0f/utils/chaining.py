@@ -178,20 +178,19 @@ class ListChaining(Chaining):
 def _process_function_list(self, routines):
     """Chain function which returns a function.
 
-    :param routine: routine to process.
-    :param tuple args: routine varargs.
-    :param dict kwargs: routine kwargs.
+    :param routines: routines to process.
     """
 
     def processing(*args, **kwargs):
-        """Execute routines with input args and kwargs and add reuslt in
+        """Execute routines with input args and kwargs and add result in
         chaining.___.
 
-        :param tuple args: routine varargs.
-        :param dict kwargs: routine kwargs.
+        :param tuple args: routines varargs.
+        :param dict kwargs: routines kwargs.
         :return: chaining chaining.
         :rtype: Chaining
         """
+
         results = [None] * len(routines)
         for index, routine in enumerate(routines):
             if isinstance(routine, Exception):

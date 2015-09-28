@@ -25,6 +25,9 @@
 # SOFTWARE.
 # --------------------------------------------------------------------
 
+"""b3j0f project building script.
+"""
+
 from setuptools import setup, find_packages
 
 from os.path import abspath, dirname, join
@@ -46,7 +49,7 @@ DESCRIPTION = 'Set of tools and utilities useful in python projects'
 
 setup(
     name='b3j0f.utils',
-    version='0.9.5',
+    version='0.10.0',
     packages=find_packages(exclude=['test.*', '*.test.*']),
     author='b3j0f',
     author_email='jlabejof@yahoo.fr',

@@ -29,6 +29,8 @@ from unittest import main
 
 from time import sleep
 
+from random import random
+
 from b3j0f.utils.ut import UTCase
 from b3j0f.utils.version import PY2
 from b3j0f.utils.property import (
@@ -38,7 +40,7 @@ from b3j0f.utils.property import (
     get_first_property, get_first_properties,
     setdefault, put_property,
     __B3J0F__PROPERTIES__,
-    find_ctx
+    find_ctx, addproperties, _protectedattrname
 )
 
 
@@ -605,6 +607,134 @@ class SetDefaultTest(UTCase):
         value = setdefault(elt=self, key=self.key, default=self.new_value)
 
         self.assertEqual(value, self.new_value)
+
+
+class TestAddProperties(UTCase):
+    """Test the addproperties decorator."""
+
+    def setUp(self):
+
+        self.count = 5
+        # generate count random property names
+        self.names = [str(random()) for i in range(self.count)]
+
+        self.getternames = set()
+        self.setternames = {}
+        self.deleternames = set()
+
+    def getter(self, name=None):
+        """Property getter."""
+        if name is None:
+            name = self.name
+        self.getternames.add(name)
+        return self
+
+    def setter(self, value, name=None):
+        """Property setter."""
+        if name is None:
+            name = self.name
+        self.setternames[name] = value
+
+    def deleter(self, name=None):
+        """Property deleter."""
+        if name is None:
+            name = self.name
+        self.deleternames.add(name)
+
+    def test_empty_cls(self):
+        """Test to add properties on an empty cls."""
+        # add properties
+        @addproperties(names=self.names)
+        class Test(object):
+            """Test class."""
+
+        test = Test()
+
+        for name in self.names:
+            # assert properties are in Test
+            prop = getattr(Test, name)
+            self.assertTrue(isinstance(prop, property))
+            # get protected attr name
+            protectedattrname = _protectedattrname(name)
+            # assert getter
+            self.assertRaises(AttributeError, getattr, test, name)
+            setattr(test, protectedattrname, self)
+            value = getattr(test, name)
+            self.assertIs(value, self)
+            delattr(test, protectedattrname)
+            # assert setter
+            setattr(test, name, self)
+            delattr(test, protectedattrname)
+            # assert deleter
+            self.assertRaises(AttributeError, delattr, test, name)
+            setattr(test, protectedattrname, self)
+            delattr(test, name)
+
+    def test_not_empty_cls(self):
+        """Test to add properties with existing properties."""
+        class Test(object):
+            """Test class."""
+
+        for name in self.names:
+            prop = property(
+                fget=self.getter, fset=self.setter, fdel=self.deleter
+            )
+            setattr(Test, name, prop)
+
+        addproperties(names=self.names)(Test)
+
+        test = Test()
+
+        for name in self.names:
+            # assert existing getter
+            self.name = name
+            self.assertNotIn(name, self.getternames)
+            value = getattr(test, name)
+            self.assertIn(name, self.getternames)
+            self.assertIs(value, self)
+            # assert exising setter
+            self.assertNotIn(name, self.setternames)
+            setattr(test, name, value)
+            self.assertIn(name, self.setternames)
+            self.assertIs(self.setternames[name], self)
+            # assert existing deleter
+            self.assertNotIn(name, self.deleternames)
+            delattr(test, name)
+            self.assertIn(name, self.deleternames)
+
+    def test_ab(self):
+        """Test after/before getter/setter/deleter."""
+
+        @addproperties(
+            names=self.names,
+            bfget=self.getter, afget=self.getter,
+            bfset=self.setter, afset=self.setter,
+            bfdel=self.deleter, afdel=self.deleter
+        )
+        class Test(object):
+            """Test class."""
+
+        test = Test()
+
+        for name in self.names:
+            # assert existing getter
+            self.assertNotIn(name, self.getternames)
+            self.assertRaises(AttributeError, getattr, test, name)
+            # get protected attr name
+            protectedattrname = _protectedattrname(name)
+            setattr(test, protectedattrname, None)
+            value = getattr(test, name)
+            self.assertIn(name, self.getternames)
+            self.assertIs(value, self)
+            # assert exising setter
+            self.assertNotIn(name, self.setternames)
+            setattr(test, name, value)
+            self.assertIn(name, self.setternames)
+            self.assertIs(self.setternames[name], self)
+            # assert existing deleter
+            self.assertNotIn(name, self.deleternames)
+            delattr(test, name)
+            self.assertIn(name, self.deleternames)
 
 
 if __name__ == '__main__':

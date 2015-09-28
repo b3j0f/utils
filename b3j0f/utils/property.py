@@ -47,7 +47,7 @@ __all__ = [
     'put_properties', 'del_properties',
     'firsts', 'remove_ctx',
     'setdefault', 'free_cache',
-    'find_ctx'
+    'find_ctx', 'addproperties'
 ]
 
 from b3j0f.utils.version import PY2
@@ -56,6 +56,8 @@ from b3j0f.utils.iterable import ensureiterable
 from inspect import ismethod
 
 from collections import Hashable
+
+from types import FunctionType, MethodType
 
 try:
     from threading import Timer
@@ -703,3 +705,219 @@ def setdefault(elt, key, default, ctx=None):
         elt_properties[key] = default
 
     return result
+
+
+def _protectedattrname(name):
+    """Get protected attribute name from input public attribute name.
+
+    :param str name: public attribute name.
+    :return: protected attribute name.
+    :rtype: str
+    """
+
+    return '_{0}'.format(name)
+
+
+def addproperties(
+        names,
+        bfget=None, afget=None, enableget=True,
+        bfset=None, afset=None, enableset=True,
+        bfdel=None, afdel=None, enabledel=True
+):
+    """Decorator in charge of adding python properties to cls.
+
+    {a/b}fget, {a/b}fset and {a/b}fdel are applied to all properties matching
+    names in taking care to not forget default/existing properties. The
+    prefixes *a* and *b* are respectively for after and before default/existing
+    property getter/setter/deleter execution.
+
+    These getter, setter and deleter functions are called before existing or
+    default getter, setter and deleters. Default getter, setter and deleters
+    are functions which uses an attribute with a name starting with '_' and
+    finishing with the property name (like the python language convention).
+
+    .. seealso::
+        _protectedattrname(name)
+
+    :param str(s) names: property name(s) to add.
+    :param bfget: getter function to apply to all properties before
+        default/existing getter execution. Parameters are a decorated cls
+        instance and a property name.
+    :param afget: fget function to apply to all properties after
+        default/existing getter execution. Parameters are a decorated cls
+        instance and a property name.
+    :param bool enableget: if True (default), enable existing or default getter
+        . Otherwise, use only fget if given.
+    :param bfset: fset function to apply to all properties before
+        default/existing setter execution. Parameters are a decorated cls
+        instance and a property name.
+    :param afset: fset function to apply to all properties after
+        default/existing setter execution. Parameters are a decorated cls
+        instance and a property name.
+    :param bool enableset: if True (default), enable existing or default setter
+        . Otherwise, use only fset if given.
+    :param bfdel: fdel function to apply to all properties before
+        default/existing deleter execution. Parameters are a decorated cls
+        instance and a property name.
+    :param bfdel: fdel function to apply to all properties after
+        default/existing deleter execution. Parameters are a decorated cls
+        instance and a property name.
+    :param bool enabledel: if True (default), enable existing or default
+        deleter. Otherwise, use only fdel if given.
+    :return: cls decorator.
+    """
+
+    names = ensureiterable(names, exclude=str)  # ensure names is a list
+
+    if isinstance(bfget, MethodType):
+        finalbfget = lambda self, name: bfget(name)
+    else:
+        finalbfget = bfget
+
+    if isinstance(afget, MethodType):
+        finalafget = lambda self, name: afget(name)
+    else:
+        finalafget = afget
+
+    if isinstance(bfset, MethodType):
+        finalbfset = lambda self, value, name: bfset(value, name)
+    else:
+        finalbfset = bfset
+
+    if isinstance(afset, MethodType):
+        finalafset = lambda self, value, name: afset(value, name)
+    else:
+        finalafset = afset
+
+    if isinstance(bfdel, MethodType):
+        finalbfdel = lambda self, name: bfdel(name)
+    else:
+        finalbfdel = bfdel
+
+    if isinstance(afdel, MethodType):
+        finalafdel = lambda self, name: afdel(name)
+    else:
+        finalafdel = afdel
+
+    def addproperties(cls):
+        """Add properties to cls.
+
+        :param type cls: cls on adding properties.
+        :return: cls
+        """
+
+        for name in names:
+            # try to find an existing property
+            existingproperty = getattr(cls, name, None)
+            if isinstance(existingproperty, property):
+                _fget = existingproperty.fget
+                _fset = existingproperty.fset
+                _fdel = existingproperty.fdel
+
+            else:
+                _fget, _fset, _fdel = None, None, None
+
+            # construct existing/default getter
+            if _fget is None:
+                def _fget(name):
+                    """Simple getter wrapper."""
+                    def _fget(self):
+                        """Simple getter."""
+                        return getattr(self, _protectedattrname(name))
+                    return _fget
+                _fget = _fget(name)
+            # transform method to function in order to add self in parameters
+            if isinstance(_fget, MethodType):
+                final_fget = lambda self: _fget()
+            else:
+                final_fget = _fget
+
+            # construct existing/default setter
+            if _fset is None:
+                def _fset(name):
+                    """Simple setter wrapper."""
+                    def _fset(self, value):
+                        """Simple setter."""
+                        setattr(self, _protectedattrname(name), value)
+                    return _fset
+                _fset = _fset(name)
+            # transform method to function in order to add self in parameters
+            if isinstance(_fset, MethodType):
+                final_fset = lambda self, value: _fset(value)
+            else:
+                final_fset = _fset
+
+            # construct existing/default deleter
+            if _fdel is None:
+                def _fdel(name):
+                    """Simple deleter wrapper."""
+                    def _fdel(self):
+                        """Simple deleter."""
+                        delattr(self, _protectedattrname(name))
+                    return _fdel
+                _fdel = _fdel(name)
+            # transform method to function in order to add self in parameters
+            if isinstance(_fdel, MethodType):
+                final_fdel = lambda self: _fdel()
+            else:
+                final_fdel = _fdel
+
+            def _getter(final_fget, name):
+                """Property getter wrapper."""
+                def _getter(self):
+                    """Property getter."""
+                    result = None
+                    # start to process input bfget
+                    if finalbfget is not None:
+                        result = finalbfget(self, name)
+                    # process cls getter
+                    if enableget:
+                        result = final_fget(self)
+                    # finish to process afget
+                    if finalafget is not None:
+                        result = finalafget(self, name)
+                    return result
+                return _getter
+            _getter = _getter(final_fget, name)
+
+            def _setter(final_fset, name):
+                """Property setter wrapper."""
+                def _setter(self, value):
+                    """Property setter."""
+                    # start to process input bfset
+                    if finalbfset is not None:
+                        finalbfset(self, value, name)
+                    # finish to process cls setter
+                    if enableset:
+                        final_fset(self, value)
+                    # finish to process afset
+                    if finalafset is not None:
+                        finalafset(self, value, name)
+                return _setter
+            _setter = _setter(final_fset, name)
+
+            def _deleter(final_fdel, name):
+                """Property deleter wrapper."""
+                def _deleter(self):
+                    """Property deleter."""
+                    # start to process input fdel
+                    if finalbfdel is not None:
+                        finalbfdel(self, name)
+                    # finish to process cls deleter
+                    if enabledel:
+                        final_fdel(self)
+                    # finish to process afget
+                    if finalafdel is not None:
+                        finalafdel(self, name)
+                return _deleter
+            _deleter = _deleter(final_fdel, name)
+
+            # get property name
+            propertyfield = property(fget=_getter, fset=_setter, fdel=_deleter)
+
+            # put property name in cls
+            setattr(cls, name, propertyfield)
+
+        return cls  # finish to return the cls
+
+    return addproperties
