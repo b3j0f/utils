@@ -1,6 +1,11 @@
 ChangeLog
 =========
 
+0.10.1 (15/09/28)
+-----------------
+
+- improve addproperties execution time and unittests.
+
 0.10.0 (15/09/28)
 -----------------
 

@@ -807,6 +807,7 @@ def addproperties(
         """
 
         for name in names:
+            protectedattrname = _protectedattrname(name)
             # try to find an existing property
             existingproperty = getattr(cls, name, None)
             if isinstance(existingproperty, property):
@@ -819,13 +820,13 @@ def addproperties(
 
             # construct existing/default getter
             if _fget is None:
-                def _fget(name):
+                def _fget(name, protectedattrname):
                     """Simple getter wrapper."""
                     def _fget(self):
                         """Simple getter."""
-                        return getattr(self, _protectedattrname(name))
+                        return getattr(self, protectedattrname, None)
                     return _fget
-                _fget = _fget(name)
+                _fget = _fget(name, protectedattrname)
             # transform method to function in order to add self in parameters
             if isinstance(_fget, MethodType):
                 final_fget = lambda self: _fget()
@@ -834,13 +835,13 @@ def addproperties(
 
             # construct existing/default setter
             if _fset is None:
-                def _fset(name):
+                def _fset(name, protectedattrname):
                     """Simple setter wrapper."""
                     def _fset(self, value):
                         """Simple setter."""
-                        setattr(self, _protectedattrname(name), value)
+                        setattr(self, protectedattrname, value)
                     return _fset
-                _fset = _fset(name)
+                _fset = _fset(name, protectedattrname)
             # transform method to function in order to add self in parameters
             if isinstance(_fset, MethodType):
                 final_fset = lambda self, value: _fset(value)
@@ -849,13 +850,14 @@ def addproperties(
 
             # construct existing/default deleter
             if _fdel is None:
-                def _fdel(name):
+                def _fdel(name, protectedattrname):
                     """Simple deleter wrapper."""
                     def _fdel(self):
                         """Simple deleter."""
-                        delattr(self, _protectedattrname(name))
+                        if hasattr(self, protectedattrname):
+                            delattr(self, protectedattrname)
                     return _fdel
-                _fdel = _fdel(name)
+                _fdel = _fdel(name, protectedattrname)
             # transform method to function in order to add self in parameters
             if isinstance(_fdel, MethodType):
                 final_fdel = lambda self: _fdel()

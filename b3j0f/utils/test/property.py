@@ -657,18 +657,21 @@ class TestAddProperties(UTCase):
             # get protected attr name
             protectedattrname = _protectedattrname(name)
             # assert getter
-            self.assertRaises(AttributeError, getattr, test, name)
+            self.assertFalse(hasattr(test, protectedattrname))
+            value = getattr(test, name)
+            self.assertIsNone(value)
             setattr(test, protectedattrname, self)
             value = getattr(test, name)
             self.assertIs(value, self)
             delattr(test, protectedattrname)
             # assert setter
+            self.assertFalse(hasattr(test, protectedattrname))
             setattr(test, name, self)
-            delattr(test, protectedattrname)
+            self.assertTrue(hasattr(test, protectedattrname))
             # assert deleter
-            self.assertRaises(AttributeError, delattr, test, name)
-            setattr(test, protectedattrname, self)
+            self.assertTrue(hasattr(test, protectedattrname))
             delattr(test, name)
+            self.assertFalse(hasattr(test, protectedattrname))
 
     def test_not_empty_cls(self):
         """Test to add properties with existing properties."""
@@ -686,20 +689,24 @@ class TestAddProperties(UTCase):
         test = Test()
 
         for name in self.names:
+            protectedattrname = _protectedattrname(name)
             # assert existing getter
             self.name = name
             self.assertNotIn(name, self.getternames)
+            self.assertFalse(hasattr(test, protectedattrname))
             value = getattr(test, name)
             self.assertIn(name, self.getternames)
             self.assertIs(value, self)
             # assert exising setter
             self.assertNotIn(name, self.setternames)
             setattr(test, name, value)
+            self.assertTrue(hasattr(test, protectedattrname))
             self.assertIn(name, self.setternames)
             self.assertIs(self.setternames[name], self)
             # assert existing deleter
             self.assertNotIn(name, self.deleternames)
             delattr(test, name)
+            self.assertFalse(hasattr(test, protectedattrname))
             self.assertIn(name, self.deleternames)
 
     def test_ab(self):
@@ -717,23 +724,30 @@ class TestAddProperties(UTCase):
         test = Test()
 
         for name in self.names:
-            # assert existing getter
-            self.assertNotIn(name, self.getternames)
-            self.assertRaises(AttributeError, getattr, test, name)
             # get protected attr name
             protectedattrname = _protectedattrname(name)
-            setattr(test, protectedattrname, None)
+            # assert existing getter
+            self.assertNotIn(name, self.getternames)
+            self.assertFalse(hasattr(test, protectedattrname))
+            value = getattr(test, name)
+            self.assertIs(value, self)
+            # assert setter
+            setattr(test, protectedattrname, self)
+            value = getattr(test, protectedattrname)
+            self.assertIs(value, self)
             value = getattr(test, name)
             self.assertIn(name, self.getternames)
             self.assertIs(value, self)
             # assert exising setter
             self.assertNotIn(name, self.setternames)
             setattr(test, name, value)
+            self.assertTrue(hasattr(test, protectedattrname))
             self.assertIn(name, self.setternames)
             self.assertIs(self.setternames[name], self)
             # assert existing deleter
             self.assertNotIn(name, self.deleternames)
             delattr(test, name)
+            self.assertFalse(hasattr(test, protectedattrname))
             self.assertIn(name, self.deleternames)
 
 
