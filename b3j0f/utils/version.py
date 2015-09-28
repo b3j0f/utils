@@ -36,7 +36,8 @@ from platform import python_implementation
 __all__ = [
     'PY3', 'PY2', 'PY26', 'PY27',  # python versions
     'PYPY', 'CPYTHON', 'JYTHON', 'IRONPYTHON',  # python runtime types
-    'basestring', 'getcallargs', 'OrderedDict'  # python2.7 objects
+    'basestring', 'getcallargs', 'OrderedDict',  # python2.7 objects
+    'range'
 ]
 
 PY3 = version_info[0] == 3  #: python3
@@ -50,8 +51,11 @@ IRONPYTHON = python_implementation() == 'IronPython'  #: IronPython
 
 if PY3:
     basestring = str
+    range = range
+
 else:
     basestring = str, unicode
+    range = xrange
 
 # add functions and types if py26 which exist in py27 and py3.x
 if PY26:
