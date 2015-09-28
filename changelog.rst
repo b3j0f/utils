@@ -1,6 +1,11 @@
 ChangeLog
 =========
 
+0.10.2 (15/09/28)
+-----------------
+
+- auto generate documentation in the addproperties decorator.
+
 0.10.1 (15/09/28)
 -----------------
 

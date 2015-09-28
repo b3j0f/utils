@@ -799,7 +799,7 @@ def addproperties(
     else:
         finalafdel = afdel
 
-    def addproperties(cls):
+    def _addproperties(cls):
         """Add properties to cls.
 
         :param type cls: cls on adding properties.
@@ -827,6 +827,9 @@ def addproperties(
                         return getattr(self, protectedattrname, None)
                     return _fget
                 _fget = _fget(name, protectedattrname)
+                _fget.__doc__ = 'Get this {0}.\n:return: this {0}.'.format(
+                    name
+                )
             # transform method to function in order to add self in parameters
             if isinstance(_fget, MethodType):
                 final_fget = lambda self: _fget()
@@ -842,6 +845,9 @@ def addproperties(
                         setattr(self, protectedattrname, value)
                     return _fset
                 _fset = _fset(name, protectedattrname)
+                _fset.__doc__ = (
+                    'Change of {0}.\n:param {0}: {0} to use.'.format(name)
+                )
             # transform method to function in order to add self in parameters
             if isinstance(_fset, MethodType):
                 final_fset = lambda self, value: _fset(value)
@@ -858,6 +864,7 @@ def addproperties(
                             delattr(self, protectedattrname)
                     return _fdel
                 _fdel = _fdel(name, protectedattrname)
+                _fdel.__doc__ = 'Delete this {0}.'.format(name)
             # transform method to function in order to add self in parameters
             if isinstance(_fdel, MethodType):
                 final_fdel = lambda self: _fdel()
@@ -881,6 +888,7 @@ def addproperties(
                     return result
                 return _getter
             _getter = _getter(final_fget, name)
+            _getter.__doc__ = final_fget.__doc__  # update doc
 
             def _setter(final_fset, name):
                 """Property setter wrapper."""
@@ -897,6 +905,7 @@ def addproperties(
                         finalafset(self, value, name)
                 return _setter
             _setter = _setter(final_fset, name)
+            _setter.__doc__ = final_fset.__doc__  # update doc
 
             def _deleter(final_fdel, name):
                 """Property deleter wrapper."""
@@ -913,13 +922,17 @@ def addproperties(
                         finalafdel(self, name)
                 return _deleter
             _deleter = _deleter(final_fdel, name)
+            _deleter.__doc__ = final_fdel.__doc__  # update doc
 
             # get property name
-            propertyfield = property(fget=_getter, fset=_setter, fdel=_deleter)
+            doc = '{0} property.'.format(name)
+            propertyfield = property(
+                fget=_getter, fset=_setter, fdel=_deleter, doc=doc
+            )
 
             # put property name in cls
             setattr(cls, name, propertyfield)
 
         return cls  # finish to return the cls
 
-    return addproperties
+    return _addproperties
