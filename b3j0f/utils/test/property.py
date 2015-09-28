@@ -700,7 +700,6 @@ class TestAddProperties(UTCase):
             # assert exising setter
             self.assertNotIn(name, self.setternames)
             setattr(test, name, value)
-            self.assertTrue(hasattr(test, protectedattrname))
             self.assertIn(name, self.setternames)
             self.assertIs(self.setternames[name], self)
             # assert existing deleter
