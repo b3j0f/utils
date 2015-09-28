@@ -37,7 +37,7 @@ __all__ = [
     'PY3', 'PY2', 'PY26', 'PY27',  # python versions
     'PYPY', 'CPYTHON', 'JYTHON', 'IRONPYTHON',  # python runtime types
     'basestring', 'getcallargs', 'OrderedDict',  # python2.7 objects
-    'range'
+    'range', 'raw_input', 'xrange'
 ]
 
 PY3 = version_info[0] == 3  #: python3
@@ -49,13 +49,17 @@ CPYTHON = python_implementation() == 'CPython'  #: cpython
 JYTHON = python_implementation() == 'Jython'  #: jython
 IRONPYTHON = python_implementation() == 'IronPython'  #: IronPython
 
-if PY3:
+if PY3:  # set references to common function names.
     basestring = str
     range = range
+    xrange = range
+    raw_input = input
 
 else:
     basestring = str, unicode
     range = xrange
+    xrange = xrange
+    raw_input = raw_input
 
 # add functions and types if py26 which exist in py27 and py3.x
 if PY26:

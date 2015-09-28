@@ -32,7 +32,7 @@ from time import sleep
 from random import random
 
 from b3j0f.utils.ut import UTCase
-from b3j0f.utils.version import PY2
+from b3j0f.utils.version import PY2, range
 from b3j0f.utils.property import (
     get_properties, put_properties, del_properties,
     get_local_properties, get_local_property,

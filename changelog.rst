@@ -4,7 +4,7 @@ ChangeLog
 0.10.3 (15/09/28)
 -----------------
 
-- add range definition in the module version in order to use xrange whatever python2/3 execution environment.
+- add range and raw_input definition in the module version in order to use xrange whatever python2/3 execution environment, and raw_input in python3.
 
 0.10.2 (15/09/28)
 -----------------
