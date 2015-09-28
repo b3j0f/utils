@@ -1,6 +1,11 @@
 ChangeLog
 =========
 
+0.10.3 (15/09/28)
+-----------------
+
+- add range definition in the module version in order to use xrange whatever python2/3 execution environment.
+
 0.10.2 (15/09/28)
 -----------------
 
