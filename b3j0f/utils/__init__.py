@@ -29,7 +29,4 @@
 
 __all__ = ['__version_info__', '__version__']
 
-#: project version info
-__version_info__ = 0, 10, 3, "beta", 0
-#: project version
-__version__ = ".".join(str(v) for v in __version_info__[:3])
+from .version import __version__, __version_info__

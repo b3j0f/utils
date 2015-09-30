@@ -32,9 +32,25 @@ from setuptools import setup, find_packages
 
 from os.path import abspath, dirname, join
 
+from re import compile as re_compile, re_S
+
+NAME = 'b3j0f.utils'  # library name
+
+_namepath = NAME.replace('.', '/')
+
+_base_path = dirname(abspath(__file__))
+
 # get long description from setup directory abspath
-with open(join(dirname(abspath(__file__)), 'README.rst')) as f:
+with open(join(_base_path, 'README.rst')) as f:
     DESC = f.read()
+
+# Get the version - do not use normal import because it does break coverage
+# thanks to the python jira project
+# (https://github.com/pycontribs/jira/blob/master/setup.py)
+with open(join(_base_path, _namepath, 'version.py')) as f:
+    stream = f.read()
+    regex = r".*__version__ = '(.*?)'"
+    VERSION = re_compile(regex, re_S).match(stream).group(1)
 
 KEYWORDS = [
     'utils', 'chaining', 'iterable', 'tools', 'path', 'property', 'dynamic',
@@ -47,9 +63,11 @@ DEPENDENCIES = ['ordereddict']
 
 DESCRIPTION = 'Set of tools and utilities useful in python projects'
 
+URL = 'https://github.com/{0}'.format(_namepath)
+
 setup(
-    name='b3j0f.utils',
-    version='0.10.3',
+    name=NAME,
+    version=VERSION,
     packages=find_packages(exclude=['test.*', '*.test.*']),
     author='b3j0f',
     author_email='jlabejof@yahoo.fr',
@@ -57,7 +75,7 @@ setup(
     description=DESCRIPTION,
     long_description=DESC,
     include_package_data=True,
-    url='https://github.com/b3j0f/utils/',
+    url=URL,
     license='MIT License',
     classifiers=[
         "Development Status :: 4 - Beta",

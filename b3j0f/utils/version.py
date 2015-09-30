@@ -34,11 +34,24 @@ from sys import version_info
 from platform import python_implementation
 
 __all__ = [
+    '__version_info__', '__version__',  # lib version
     'PY3', 'PY2', 'PY26', 'PY27',  # python versions
     'PYPY', 'CPYTHON', 'JYTHON', 'IRONPYTHON',  # python runtime types
     'basestring', 'getcallargs', 'OrderedDict',  # python2.7 objects
     'range', 'raw_input', 'xrange'
 ]
+
+# Store the version here so:
+# 1) we don't load dependencies by storing it in __init__.py
+# 2) we can import it in setup.py for the same reason
+# 3) we can import it into the utils module
+# thanks to https://github.com/pycontribs/jira/blob/master/jira/version.py
+
+#: project version info
+__version_info__ = 0, 10, 3, 'beta', 0
+#: project version
+__version__ = '0.10.3'
+
 
 PY3 = version_info[0] == 3  #: python3
 PY2 = version_info[0] == 2  #: python2
