@@ -39,7 +39,7 @@ except ImportError:
 
 from random import random
 
-from b3j0f.utils.version import PY26
+from .version import PY26
 
 __all__ = ['clearcache', 'incache', 'lookup', 'getpath']
 

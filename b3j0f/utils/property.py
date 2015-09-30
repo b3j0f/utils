@@ -50,14 +50,14 @@ __all__ = [
     'find_ctx', 'addproperties'
 ]
 
-from b3j0f.utils.version import PY2
-from b3j0f.utils.iterable import ensureiterable
+from .version import PY2
+from .iterable import ensureiterable
 
 from inspect import ismethod
 
 from collections import Hashable
 
-from types import FunctionType, MethodType
+from types import MethodType
 
 try:
     from threading import Timer

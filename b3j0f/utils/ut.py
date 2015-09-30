@@ -29,7 +29,7 @@
 
 from unittest import TestCase
 
-from b3j0f.utils.version import PY2, PY26
+from .version import PY2, PY26
 
 from re import match
 

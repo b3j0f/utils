@@ -50,7 +50,7 @@ try:
 except ImportError:
     import builtins as __builtin__
 
-from b3j0f.utils.version import PY3
+from .version import PY3
 
 __all__ = ['bind_all', 'make_constants']
 

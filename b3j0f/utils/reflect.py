@@ -27,8 +27,8 @@
 """Python reflection tools.
 """
 
-from b3j0f.utils.version import PY2, range
-from b3j0f.utils.iterable import ensureiterable
+from .version import PY2, range
+from .iterable import ensureiterable
 
 from inspect import isclass, isroutine, ismethod, getmodule
 

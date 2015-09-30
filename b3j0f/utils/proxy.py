@@ -50,8 +50,8 @@ from inspect import (
     getmembers, isroutine, ismethod, getargspec, getfile, isbuiltin, isclass
 )
 
-from b3j0f.utils.version import PY2, PY3, basestring
-from b3j0f.utils.path import lookup
+from .version import PY2, PY3, basestring
+from .path import lookup
 
 # consts for interception loading
 LOAD_GLOBAL = opmap['LOAD_GLOBAL']
