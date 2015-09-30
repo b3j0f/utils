@@ -32,7 +32,7 @@ from setuptools import setup, find_packages
 
 from os.path import abspath, dirname, join
 
-from re import compile as re_compile, re_S
+from re import compile as re_compile, S as re_S
 
 NAME = 'b3j0f.utils'  # library name
 
