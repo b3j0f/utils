@@ -25,8 +25,7 @@
 # SOFTWARE.
 # --------------------------------------------------------------------
 
-"""b3j0f project building script.
-"""
+"""b3j0f project building script."""
 
 from setuptools import setup, find_packages
 
@@ -49,7 +48,7 @@ with open(join(_base_path, 'README.rst')) as f:
 # (https://github.com/pycontribs/jira/blob/master/setup.py)
 with open(join(_base_path, _namepath, 'version.py')) as f:
     stream = f.read()
-    regex = r".*__version__ = '(.*?)'"
+    regex = r'.*__version__ = \'(.*?)\''
     VERSION = re_compile(regex, re_S).match(stream).group(1)
 
 KEYWORDS = [
@@ -78,22 +77,22 @@ setup(
     url=URL,
     license='MIT License',
     classifiers=[
-        "Development Status :: 4 - Beta",
-        "License :: OSI Approved :: MIT License",
-        "Natural Language :: French",
-        "Operating System :: OS Independent",
-        "Topic :: Utilities",
-        "Topic :: Software Development",
-        "Intended Audience :: Developers",
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 2.6",
-        "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.0",
-        "Programming Language :: Python :: 3.1",
-        "Programming Language :: Python :: 3.2",
-        "Programming Language :: Python :: 3.3",
-        "Programming Language :: Python :: 3.4"
+        'Development Status :: 4 - Beta',
+        'License :: OSI Approved :: MIT License',
+        'Natural Language :: French',
+        'Operating System :: OS Independent',
+        'Topic :: Utilities',
+        'Topic :: Software Development',
+        'Intended Audience :: Developers',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.0',
+        'Programming Language :: Python :: 3.1',
+        'Programming Language :: Python :: 3.2',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4'
     ],
     test_suite='b3j0f',
     keywords=KEYWORDS
