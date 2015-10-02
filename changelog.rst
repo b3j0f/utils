@@ -1,6 +1,11 @@
 ChangeLog
 =========
 
+0.10.4 (2015/10/02)
+-----------------
+
+- update the module version with python3 and python2 common modules with different names.
+
 0.10.3 (15/09/28)
 -----------------
 

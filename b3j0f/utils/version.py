@@ -34,11 +34,13 @@ from sys import version_info
 from platform import python_implementation
 
 __all__ = [
-    '__version_info__', '__version__',  # lib version
+    '__version__',  # lib version
     'PY3', 'PY2', 'PY26', 'PY27',  # python versions
     'PYPY', 'CPYTHON', 'JYTHON', 'IRONPYTHON',  # python runtime types
     'basestring', 'getcallargs', 'OrderedDict',  # python2.7 objects
-    'range', 'raw_input', 'xrange'
+    'range', 'raw_input', 'xrange',
+    'httplib', '_winreg', 'ConfigParser',  # common modules with python2 name
+    'copy_reg', 'Queue', 'SocketServer', 'markupbase', 'repr'
 ]
 
 # Store the version here so:
@@ -47,10 +49,8 @@ __all__ = [
 # 3) we can import it into the utils module
 # thanks to https://github.com/pycontribs/jira/blob/master/jira/version.py
 
-#: project version info
-__version_info__ = 0, 10, 3, 'beta', 0
 #: project version
-__version__ = '0.10.3'
+__version__ = '0.10.4'
 
 
 PY3 = version_info[0] == 3  #: python3
@@ -62,17 +62,45 @@ CPYTHON = python_implementation() == 'CPython'  #: cpython
 JYTHON = python_implementation() == 'Jython'  #: jython
 IRONPYTHON = python_implementation() == 'IronPython'  #: IronPython
 
-if PY3:  # set references to common function names.
+if PY3:  # set references to common object with different names
+    # define python3 functions with python2 names
     basestring = str
     range = range
     xrange = range
     raw_input = input
 
+    # import python3 modules with python2 module names
+    import http.client as httplib  #: http.client in python3.
+    try:
+        import winreg as _winreg  #: winreg in python3.
+    except ImportError:
+        __all__.remove('_winreg')
+    import configparser as ConfigParser  #: configparser in python3.
+    import copyreg as copy_reg  #: copyreg in python3.
+    import queue as Queue  #: queue in python3.
+    import socketserver as SocketServer  #: socketserver in python3.
+    import _markupbase as markupbase  #: _markupbase in python3.
+    import reprlib as repr  #: reprlib in python3.
+
 else:
+    # define python2 which could be also used in python3 environment
     basestring = str, unicode
     range = xrange
     xrange = xrange
     raw_input = raw_input
+
+    # import python2 modules which could be imported from this module
+    import httplib
+    try:
+        import _winreg
+    except ImportError:
+        __all__.remove('_winreg')
+    import ConfigParser
+    import copy_reg
+    import Queue
+    import SocketServer
+    import markupbase
+    import repr
 
 # add functions and types if py26 which exist in py27 and py3.x
 if PY26:
