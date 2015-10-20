@@ -5,6 +5,7 @@ ChangeLog
 -----------------
 
 - update the module version with python3 and python2 common modules with different names.
+- add support of pyhton3.5.
 
 0.10.3 (15/09/28)
 -----------------
