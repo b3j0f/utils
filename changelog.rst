@@ -1,8 +1,13 @@
 ChangeLog
 =========
 
+1.0.0 (2015/10/20)
+------------------
+
+- set stable version.
+
 0.10.4 (2015/10/02)
------------------
+-------------------
 
 - update the module version with python3 and python2 common modules with different names.
 - add support of pyhton3.5.
