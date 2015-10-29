@@ -50,17 +50,18 @@ __all__ = [
 # thanks to https://github.com/pycontribs/jira/blob/master/jira/version.py
 
 #: project version
-__version__ = '1.0.0'
+__version__ = '1.1.0'
 
 
-PY3 = version_info[0] == 3  #: python3
-PY2 = version_info[0] == 2  #: python2
-PY26 = PY2 and version_info[1] == 6  #: python2.6
-PY27 = PY2 and version_info[1] == 7  #: python2.7
-PYPY = python_implementation() == 'PyPy'  #: pypy
-CPYTHON = python_implementation() == 'CPython'  #: cpython
-JYTHON = python_implementation() == 'Jython'  #: jython
-IRONPYTHON = python_implementation() == 'IronPython'  #: IronPython
+PY3 = version_info[0] == 3  #: python3.
+PY2 = version_info[0] == 2  #: python2.
+PY26 = PY2 and version_info[1] == 6  #: python2.6.
+PY27 = PY2 and version_info[1] == 7  #: python2.7.
+PYPY = python_implementation() == 'PyPy'  #: pypy.
+CPYTHON = python_implementation() == 'CPython'  #: cpython.
+JYTHON = python_implementation() == 'Jython'  #: jython.
+IRONPYTHON = python_implementation() == 'IronPython'  #: IronPython.
+
 
 if PY3:  # set references to common object with different names
     # define python3 functions with python2 names

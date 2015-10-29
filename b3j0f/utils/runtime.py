@@ -46,13 +46,47 @@ from opcode import opmap, HAVE_ARGUMENT, EXTENDED_ARG
 from types import FunctionType, ModuleType
 
 try:
-    import __builtin__
+    import __builtin__  #: builtin module.
 except ImportError:
-    import builtins as __builtin__
+    import builtins as __builtin__  #: builtin module.
 
 from .version import PY3
 
-__all__ = ['bind_all', 'make_constants']
+__all__ = ['bind_all', 'make_constants', '__builtin__', 'safebuiltin']
+
+
+IO_PROPS = [
+    'open', '__name__', '__debug__', '__doc__', '__import__', '__package__',
+    'compile', 'copyright', 'credits', 'eval', 'execfile', 'exit', 'file',
+    'globals', 'help', 'input', 'intern', 'license', 'locals', 'open', 'print',
+    'quit', 'raw_input', 'reload'
+]  #: set of builtin objects to remove from a safe builtin.
+
+_SAFEBUILTIN = None  #: protected safebuiltin.
+
+
+def safebuiltin(renew=False):
+    """Construct a safe builtin environment without I/O functions.
+
+    :param bool renew: renew the safebuiltin if True (False by default).
+    :rtype: dict
+    """
+
+    result = _SAFEBUILTIN
+
+    if result is None or renew:
+
+        result = {}
+
+        objectnames = [
+            objectname for objectname in dir(__builtin__)
+            if objectname not in IO_PROPS
+        ]
+
+        for objectname in objectnames:
+            result[objectname] = __builtin__[objectname]
+
+    return result
 
 STORE_GLOBAL = opmap['STORE_GLOBAL']
 LOAD_GLOBAL = opmap['LOAD_GLOBAL']

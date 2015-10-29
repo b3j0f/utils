@@ -1,6 +1,11 @@
 ChangeLog
 =========
 
+1.0.1 (2015/10/29)
+------------------
+
+- add the function safebuiltin and the module __builtin__ in the runtime module.
+
 1.0.0 (2015/10/20)
 ------------------
 
