@@ -30,17 +30,18 @@ among several python versions and platforms.
 
 from __future__ import unicode_literals
 
-from sys import version_info
+from sys import version_info, modules
 from platform import python_implementation
+from inspect import getmodule
 
 __all__ = [
     '__version__',  # lib version
     'PY3', 'PY2', 'PY26', 'PY27',  # python versions
     'PYPY', 'CPYTHON', 'JYTHON', 'IRONPYTHON',  # python runtime types
     'basestring', 'getcallargs', 'OrderedDict',  # python2.7 objects
-    'range', 'raw_input', 'xrange',
+    'range', 'raw_input', 'xrange', 'cexec',
     'httplib', '_winreg', 'ConfigParser',  # common modules with python2 name
-    'copy_reg', 'Queue', 'SocketServer', 'markupbase', 'repr'
+    'copy_reg', 'Queue', 'SocketServer', 'markupbase', 'repr',
 ]
 
 # Store the version here so:
@@ -63,12 +64,21 @@ JYTHON = python_implementation() == 'Jython'  #: jython.
 IRONPYTHON = python_implementation() == 'IronPython'  #: IronPython.
 
 
+def cexec(source, _globals, _locals):
+    """Common python2/3 exec function."""
+
+    exec(source, _globals, _locals)
+
+
 if PY3:  # set references to common object with different names
     # define python3 functions with python2 names
     basestring = str
     range = range
     xrange = range
     raw_input = input
+
+    # set exec to cexec in PY3 beceause exec is a builtin function
+    setattr(getmodule(cexec), 'cexec', getattr(getmodule(str), 'exec'))
 
     # import python3 modules with python2 module names
     import http.client as httplib  #: http.client in python3.
@@ -112,6 +122,7 @@ if PY26:
     # add functions and classes which come from
     from inspect import getargspec, ismethod
     from sys import getdefaultencoding
+
 
     # add definition of getcallargs
     def getcallargs(func, *positional, **named):

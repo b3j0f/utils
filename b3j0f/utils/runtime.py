@@ -50,43 +50,73 @@ try:
 except ImportError:
     import builtins as __builtin__  #: builtin module.
 
-from .version import PY3
+from .version import PY3, cexec
 
-__all__ = ['bind_all', 'make_constants', '__builtin__', 'safebuiltin']
+__all__ = [
+    'SAFE_BUILTINS', 'safe_eval', 'safe_exec',
+    'bind_all', 'make_constants', '__builtin__'
+]
 
 
-IO_PROPS = [
+BUILTIN_IO_PROPS = [
     'open', '__name__', '__debug__', '__doc__', '__import__', '__package__',
     'compile', 'copyright', 'credits', 'eval', 'execfile', 'exit', 'file',
     'globals', 'help', 'input', 'intern', 'license', 'locals', 'open', 'print',
     'quit', 'raw_input', 'reload'
 ]  #: set of builtin objects to remove from a safe builtin.
 
-_SAFEBUILTIN = None  #: protected safebuiltin.
 
-
-def safebuiltin(renew=False):
+def _safebuiltins():
     """Construct a safe builtin environment without I/O functions.
 
-    :param bool renew: renew the safebuiltin if True (False by default).
     :rtype: dict
     """
 
-    result = _SAFEBUILTIN
+    result = {}
 
-    if result is None or renew:
+    objectnames = [
+        objectname for objectname in dir(__builtin__)
+        if objectname not in BUILTIN_IO_PROPS
+    ]
 
-        result = {}
-
-        objectnames = [
-            objectname for objectname in dir(__builtin__)
-            if objectname not in IO_PROPS
-        ]
-
-        for objectname in objectnames:
-            result[objectname] = __builtin__[objectname]
+    for objectname in objectnames:
+        result[objectname] = getattr(__builtin__, objectname)
 
     return result
+
+SAFE_BUILTINS = {'__builtins__': _safebuiltins()}  #: safe builtins.
+
+
+def _safe_processing(fn, source, _globals=None, _locals=None):
+    """Do a safe processing of input fn in using SAFE_BUILTINS.
+
+    :param fn: function to call with input parameters.
+    :param source: source object to process with fn.
+    :param dict _globals: global objects by name.
+    :param dict _locals: local objects by name.
+    :return: fn processing result
+    """
+
+    if _globals is None:
+        _globals = SAFE_BUILTINS.copy()
+
+    else:
+        _globals.update(SAFE_BUILTINS)
+
+    return fn(source, _globals, _locals)
+
+
+def safe_eval(source, _globals=None, _locals=None):
+    """Process a safe evaluation."""
+
+    return _safe_processing(eval, source, _globals, _locals)
+
+
+def safe_exec(source, _globals=None, _locals=None):
+    """Do a safe python execution."""
+
+    return _safe_processing(cexec, source, _globals, _locals)
+
 
 STORE_GLOBAL = opmap['STORE_GLOBAL']
 LOAD_GLOBAL = opmap['LOAD_GLOBAL']

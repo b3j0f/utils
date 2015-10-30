@@ -29,9 +29,102 @@ from unittest import main
 
 from b3j0f.utils.ut import UTCase
 from b3j0f.utils.version import range
-from b3j0f.utils.runtime import make_constants, bind_all
+from b3j0f.utils.runtime import (
+    SAFE_BUILTINS, safe_eval, safe_exec,
+    make_constants, bind_all
+)
 
 import random
+
+
+class SafeTestCase(UTCase):
+    """Test the function about safe coding."""
+
+    def test_safe_builtins_max(self):
+        """Test max in SAFE_BUILTINS."""
+
+        self.assertIn('max', SAFE_BUILTINS['__builtins__'])
+
+    def test_safe_builtins_open(self):
+        """Test open not in SAFE_BUILTINS."""
+
+        self.assertNotIn('open', SAFE_BUILTINS['__builtins__'])
+
+    def test_eval_error(self):
+        """Test safe eval function with open (error)."""
+
+        self.assertRaises(NameError, safe_eval, 'open')
+
+    def test_eval(self):
+        """Test safe eval function with max."""
+
+        res = safe_eval('max')
+        self.assertIs(res, max)
+
+    def test_eval_globals(self):
+        """Test safe eval function with global open."""
+
+        res = safe_eval('open', {'open': 2})
+        self.assertIs(res, 2)
+
+    def test_eval_locals(self):
+        """Test safe eval function."""
+
+        res = safe_eval('open', None, {'open': 2})
+        self.assertIs(res, 2)
+
+    def test_safe_exec_error(self):
+        """Test safe exec function with open (error)."""
+
+        self.assertRaises(NameError, safe_exec, 'res = open')
+        self.assertNotIn('res', globals())
+        self.assertNotIn('res', locals())
+
+    def test_safe_exec(self):
+        """Test safe exec function with max."""
+
+        safe_exec('res = max')
+        self.assertNotIn('res', globals())
+        self.assertNotIn('res', locals())
+
+    def test_safe_exec_globals(self):
+        """Test safe exec function with open in globals."""
+
+        properties = {'open': 2}
+        safe_exec('res = open', properties)
+        self.assertNotIn('res', globals())
+        self.assertNotIn('res', locals())
+        self.assertIn('res', properties)
+        self.assertIs(properties['res'], 2)
+
+    def test_safe_exec_locals(self):
+        """Test safe exec function with open in locals."""
+
+        properties = {'open': 2}
+        safe_exec('res = open', None, properties)
+        self.assertNotIn('res', globals())
+        self.assertNotIn('res', locals())
+        self.assertIn('res', properties)
+
+    def test_safe_exec_empty_globals(self):
+        """Test safe exec function with empty globals."""
+
+        properties = {}
+        safe_exec('res = max', properties)
+        self.assertNotIn('res', globals())
+        self.assertNotIn('res', locals())
+        self.assertIn('res', properties)
+        self.assertIs(properties['res'], max)
+
+    def test_safe_exec_empty_locals(self):
+        """Test safe exec function with empty locals."""
+
+        properties = {}
+        safe_exec('res = max', None, properties)
+        self.assertNotIn('res', globals())
+        self.assertNotIn('res', locals())
+        self.assertIn('res', properties)
+        self.assertIs(properties['res'], max)
 
 
 class MakeConstants(UTCase):
