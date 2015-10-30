@@ -71,7 +71,7 @@ Provided tools are:
 - path: python object path resolver, from object to absolute/relative path or the inverse.
 - property: (un)bind/find properties in reflective and oop concerns.
 - reflect: tools which ease development with reflective concerns.
-- runtime: ease runtime execution.
+- runtime: ease runtime execution (transform dynamic variable to static variable in function, provide safe eval/exec functions).
 - proxy: create proxy (from design pattern) objects from a routine or an object which respects the signature and description of the proxified element.
 - ut: improve unit tests.
 - version: ease compatibility between python version (from 2.x to 3.x).
@@ -176,6 +176,32 @@ True
 2
 >>> assert proxy is not l
 >>> assert proxified_elt(proxy) is l
+
+Runtime
+-------
+
+>>> from b3j0f.utils.runtime import safe_eval
+>>> try:
+>>>     safe_eval('open')
+>>> except NameError:
+>>>     print('open does not exist')
+open does not exist
+
+Version
+-------
+
+>>> from b3j0f.utils.version import builtins, getargspec
+>>> # builtins is the builtin module whatever running python v>2
+>>> # and getargspec is same function from python>2.7 for python2.6
+>>> from b3j0f.utils.version import PY3, PY26, PY27
+>>> # PY3 is True if python version is 3, etc.
+
+UT
+--
+
+>>> from b3j0f.utils.ut import UTCase  # class which inherits from unittest.TestCase
+>>> UTCase.assertIs and True  # all methods of python2/3 TestCase are implemented in the UTCase for python v>2.
+True
 
 Perspectives
 ============

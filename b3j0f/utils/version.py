@@ -40,8 +40,8 @@ __all__ = [
     'PYPY', 'CPYTHON', 'JYTHON', 'IRONPYTHON',  # python runtime types
     'basestring', 'getcallargs', 'OrderedDict',  # python2.7 objects
     'range', 'raw_input', 'xrange', 'cexec',
-    'httplib', '_winreg', 'ConfigParser',  # common modules with python2 name
-    'copy_reg', 'Queue', 'SocketServer', 'markupbase', 'repr',
+    'httplib', 'winreg', 'configparser',  # common modules with python2 name
+    'copyreg', 'queue', 'socketserver', '_markupbase', 'reprlib', 'builtins'
 ]
 
 # Store the version here so:
@@ -77,21 +77,22 @@ if PY3:  # set references to common object with different names
     xrange = range
     raw_input = input
 
-    # set exec to cexec in PY3 beceause exec is a builtin function
-    setattr(getmodule(cexec), 'cexec', getattr(getmodule(str), 'exec'))
-
     # import python3 modules with python2 module names
     import http.client as httplib  #: http.client in python3.
     try:
-        import winreg as _winreg  #: winreg in python3.
+        import winreg  #: winreg in python3.
     except ImportError:
-        __all__.remove('_winreg')
-    import configparser as ConfigParser  #: configparser in python3.
-    import copyreg as copy_reg  #: copyreg in python3.
-    import queue as Queue  #: queue in python3.
-    import socketserver as SocketServer  #: socketserver in python3.
-    import _markupbase as markupbase  #: _markupbase in python3.
-    import reprlib as repr  #: reprlib in python3.
+        pass
+    import configparser  #: configparser in python3.
+    import copyreg  #: copyreg in python3.
+    import queue  #: queue in python3.
+    import socketserver  #: socketserver in python3.
+    import _markupbase  #: _markupbase in python3.
+    import reprlib  #: reprlib in python3.
+    import builtins  #: builtin module.
+
+    # set exec to cexec in PY3 beceause exec is a builtin function
+    setattr(getmodule(cexec), 'cexec', getattr(builtins, 'exec'))
 
 else:
     # define python2 which could be also used in python3 environment
@@ -101,17 +102,18 @@ else:
     raw_input = raw_input
 
     # import python2 modules which could be imported from this module
-    import httplib
+    import httplib  #: httplib module.
     try:
-        import _winreg
+        import _winreg as winreg
     except ImportError:
-        __all__.remove('_winreg')
-    import ConfigParser
-    import copy_reg
-    import Queue
-    import SocketServer
-    import markupbase
-    import repr
+        pass
+    import ConfigParser as configparser  #: configparser module.
+    import copy_reg as copyreg  #: copy reg module.
+    import Queue as queue  #: queue module.
+    import SocketServer as socketserver  #: socketserver module.
+    import markupbase as _markupbase  #: markupbase module.
+    import repr as reprlib  #: repr module.
+    import __builtin__ as builtins  #: builtin module.
 
 # add functions and types if py26 which exist in py27 and py3.x
 if PY26:
@@ -122,7 +124,6 @@ if PY26:
     # add functions and classes which come from
     from inspect import getargspec, ismethod
     from sys import getdefaultencoding
-
 
     # add definition of getcallargs
     def getcallargs(func, *positional, **named):

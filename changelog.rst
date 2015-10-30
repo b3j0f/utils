@@ -4,7 +4,12 @@ ChangeLog
 1.0.1 (2015/10/29)
 ------------------
 
-- add the function safebuiltin and the module __builtin__ in the runtime module.
+- add in the module runtime:
+   - the function _safe_builtins
+   - the variable SAFE_BUILTINS
+   - the functions safe_eval and safe_exec used to eval/exec python code without IO functions.
+- add the builtins module in the module version.
+- add description of tu, version and runtime in the readme.
 
 1.0.0 (2015/10/20)
 ------------------

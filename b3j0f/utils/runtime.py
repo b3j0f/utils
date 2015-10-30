@@ -45,16 +45,11 @@ from opcode import opmap, HAVE_ARGUMENT, EXTENDED_ARG
 
 from types import FunctionType, ModuleType
 
-try:
-    import __builtin__  #: builtin module.
-except ImportError:
-    import builtins as __builtin__  #: builtin module.
-
-from .version import PY3, cexec
+from .version import PY3, cexec, builtins
 
 __all__ = [
     'SAFE_BUILTINS', 'safe_eval', 'safe_exec',
-    'bind_all', 'make_constants', '__builtin__'
+    'bind_all', 'make_constants'
 ]
 
 
@@ -75,19 +70,19 @@ def _safebuiltins():
     result = {}
 
     objectnames = [
-        objectname for objectname in dir(__builtin__)
+        objectname for objectname in dir(builtins)
         if objectname not in BUILTIN_IO_PROPS
     ]
 
     for objectname in objectnames:
-        result[objectname] = getattr(__builtin__, objectname)
+        result[objectname] = getattr(builtins, objectname)
 
     return result
 
 SAFE_BUILTINS = {'__builtins__': _safebuiltins()}  #: safe builtins.
 
 
-def _safe_processing(fn, source, _globals=None, _locals=None):
+def _safe_processing(nsafefn, source, _globals=None, _locals=None):
     """Do a safe processing of input fn in using SAFE_BUILTINS.
 
     :param fn: function to call with input parameters.
@@ -103,7 +98,7 @@ def _safe_processing(fn, source, _globals=None, _locals=None):
     else:
         _globals.update(SAFE_BUILTINS)
 
-    return fn(source, _globals, _locals)
+    return nsafefn(source, _globals, _locals)
 
 
 def safe_eval(source, _globals=None, _locals=None):
@@ -155,7 +150,7 @@ def _make_constants(f, builtin_only=False, stoplist=None, verbose=None):
     names = fcode.co_names
     codelen = len(newcode)
 
-    env = vars(__builtin__).copy()
+    env = vars(builtins).copy()
     if builtin_only:
         stoplist = dict.fromkeys(stoplist)
         stoplist.update(f.__globals__)
