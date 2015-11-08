@@ -28,11 +28,13 @@
 
 from __future__ import absolute_import
 
-__all__ = ['isiterable', 'ensureiterable', 'first']
+__all__ = ['isiterable', 'ensureiterable', 'first', 'last', 'itemat', 'sliceit']
 
 from sys import maxsize
 
 from collections import Iterable
+
+from six import string_types
 
 
 def isiterable(element, exclude=None):
@@ -92,9 +94,10 @@ def ensureiterable(value, iterable=list, exclude=None):
 def first(iterable, default=None):
     """Try to get input iterable first item or default if iterable is empty.
 
-    :param Iterable iterable: iterable to iterate on.
+    :param Iterable iterable: iterable to iterate on. Must provide the method
+        __iter__.
     :param default: default value to get if input iterable is empty.
-    :raises TypeError: if iterable is not an iterable value
+    :raises TypeError: if iterable is not an iterable value.
 
     :Example:
 
@@ -119,7 +122,21 @@ def first(iterable, default=None):
     return result
 
 def last(iterable, default=None):
-    """Try to get the last iterable item by successive iteration on it."""
+    """Try to get the last iterable item by successive iteration on it.
+
+    :param Iterable iterable: iterable to iterate on. Must provide the method
+        __iter__.
+    :param default: default value to get if input iterable is empty.
+    :raises TypeError: if iterable is not an iterable value.
+
+    :Example:
+
+    >>> last('tests')
+    's'
+    >>> last('', default='test')
+    'test'
+    >>> last([])
+    None"""
 
     result = default
 
@@ -140,33 +157,52 @@ def itemat(iterable, index):
 
     result = None
 
-    iterator = iter(iterable)
+    handleindex = True
 
-    if index < 0:  # ensure index is positive
-        index += len(iterable)
+    if isinstance(iterable, dict):
+        handleindex = False
 
-    while index >= 0:
+    else:
         try:
-            value = next(iterator)
+            result = iterable[index]
+        except TypeError:
+            handleindex = False
 
-        except StopIteration:
-            break
+    if not handleindex:
+        iterator = iter(iterable)
 
-        else:
-            if index == 0:
-                result = value
-                break
-            index -= 1
+        if index < 0:  # ensure index is positive
+            index += len(iterable)
+
+        while index >= 0:
+            try:
+                value = next(iterator)
+
+            except StopIteration:
+                raise IndexError(
+                    "{0} index {1} out of range".format(
+                        iterable.__class__, index
+                    )
+                )
+
+            else:
+                if index == 0:
+                    result = value
+                    break
+                index -= 1
 
     return result
 
-def slice(iterable, lower=0, upper=maxsize):
+def sliceit(iterable, lower=0, upper=None):
     """Apply a slice on input iterable."""
 
-    if isinstance(iterable, (str, list, tuple)):
-        result = iterable[lower, upper]
+    if upper is None:
+        upper = len(iterable)
 
-    else:
+    try:
+        result = iterable[lower: upper]
+
+    except TypeError:  # if iterable does not implement the slice method
         values = []
 
         if lower < 0:  # ensure lower is positive
@@ -178,7 +214,7 @@ def slice(iterable, lower=0, upper=maxsize):
         if upper > lower:
             iterator = iter(iterable)
 
-            for index in range(0, lower + upper):
+            for index in range(upper):
                 try:
                     value = next(iterator)
 
