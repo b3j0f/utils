@@ -159,11 +159,11 @@ class _Set(object):
 
                 return self.value[lower: upper]
 
-            def __cmp__(self, other):
+            def __eq__(self, other):
 
                 valuetocmp = other.value if isinstance(other, Test) else other
 
-                return len(self.value).__cmp__(len(valuetocmp))
+                return self.value == valuetocmp
 
         self._assertvalue(Test)
 
