@@ -40,54 +40,51 @@ from collections import OrderedDict
 
 
 class EnsureIterableTest(UTCase):
+    """Test ensure iterable function."""
 
     def test_list(self):
+        """test list."""
 
-        l = []
-        itererable = ensureiterable(l)
-        self.assertEqual(itererable, l)
+        value = []
+        itererable = ensureiterable(value)
+        self.assertEqual(itererable, value)
 
     def test_dict(self):
+        """test dict."""
 
-        l = []
-        iterable = ensureiterable(l, iterable=dict)
+        value = []
+        iterable = ensureiterable(value, iterable=dict)
         self.assertTrue(isinstance(iterable, dict))
         self.assertFalse(iterable)
 
     def test_exclude(self):
+        """test exclude."""
 
-        l = ""
-        iterable = ensureiterable(l, exclude=string_types)
+        value = ""
+        iterable = ensureiterable(value, exclude=string_types)
         self.assertTrue(iterable)
 
 
 class IsIterable(UTCase):
+    """Test isiterable."""
 
     def test_iterable(self):
-        """
-        Test an iterable value
-        """
+        """Test an iterable value."""
 
         self.assertTrue(isiterable([]))
 
     def test_exclude(self):
-        """
-        Test iterable and not allowed types
-        """
+        """Test iterable and not allowed types."""
 
         self.assertFalse(isiterable([], exclude=list))
 
     def test_excludes(self):
-        """
-        Test iterable with a tuple of exclude types
-        """
+        """Test iterable with a tuple of exclude types."""
 
         self.assertFalse(isiterable([], exclude=(list,) + string_types))
 
     def test_not_iterable(self):
-        """
-        Test not iterable element
-        """
+        """Test not iterable element."""
 
         self.assertFalse(isiterable(None))
 
