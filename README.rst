@@ -121,7 +121,7 @@ False
 '3'
 
 >>> sliceit(od, -2, -1)
-OrderedDict([('3', 4)])
+['3']
 
 Path
 ----

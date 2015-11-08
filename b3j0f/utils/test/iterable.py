@@ -161,7 +161,9 @@ class _Set(object):
 
             def __cmp__(self, other):
 
-                return len(self.value).__cmp__(len(other))
+                valuetocmp = other.value if isinstance(other, Test) else other
+
+                return len(self.value).__cmp__(len(valuetocmp))
 
         self._assertvalue(Test)
 
@@ -281,7 +283,9 @@ class SliceIt(UTCase, _Set):
         # test empty iterable
         empty = _type()
         value = sliceit(iterable=empty)
-        self.assertEqual(value, empty)
+        if isdict:
+            empty = []
+        self.assertEqual(empty, value)
 
         # test with not empty iterable
         randlist = _randlist()
@@ -311,17 +315,13 @@ class SliceIt(UTCase, _Set):
 
                 else:
 
-                    val = {} if isdict else []
+                    val = []
 
                     index = lower
 
                     for index in range(lower, upper):
-
                         item = itemat(iterable, index)
-                        if isdict:
-                            val[item] = iterable[item]
-                        else:
-                            val.append(item)
+                        val.append(item)
 
                     if not isdict:
                         val = _type(val)
@@ -343,18 +343,13 @@ class SliceIt(UTCase, _Set):
 
                 else:
 
-                    val = {} if isdict else []
+                    val = []
 
                     index = lower
 
                     for index in range(lower, upper):
                         item = itemat(iterable, index)
-
-                        if isdict:
-                            val[item] = iterable[item]
-
-                        else:
-                            val.append(item)
+                        val.append(item)
 
                     if not isdict:
                         val = _type(val)

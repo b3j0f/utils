@@ -153,7 +153,11 @@ def last(iterable, default=None):
 
 def itemat(iterable, index):
     """Try to get the item at index position in iterable after iterate on
-    iterable items."""
+    iterable items.
+
+    :param iterable: object which provides the method __getitem__ or __iter__.
+    :param int index: item position to get.
+    """
 
     result = None
 
@@ -194,7 +198,15 @@ def itemat(iterable, index):
     return result
 
 def sliceit(iterable, lower=0, upper=None):
-    """Apply a slice on input iterable."""
+    """Apply a slice on input iterable.
+
+    :param iterable: object which provides the method __getitem__ or __iter__.
+    :param int lower: lower bound from where start to get items.
+    :param int upper: upper bound from where finish to get items.
+    :return: sliced object of the same type of iterable if not dict, or specific
+        object. otherwise, simple list of sliced items.
+    :rtype: Iterable
+    """
 
     if upper is None:
         upper = len(iterable)
@@ -203,7 +215,7 @@ def sliceit(iterable, lower=0, upper=None):
         result = iterable[lower: upper]
 
     except TypeError:  # if iterable does not implement the slice method
-        values = []
+        result = []
 
         if lower < 0:  # ensure lower is positive
             lower += len(iterable)
@@ -223,20 +235,14 @@ def sliceit(iterable, lower=0, upper=None):
 
                 else:
                     if index >= lower:
-                        values.append(value)
+                        result.append(value)
 
-        if isinstance(iterable, dict):
-            result = {}
+    iterablecls = iterable.__class__
+    if not(isinstance(result, iterablecls) or issubclass(iterablecls, dict)):
+        try:
+            result = iterablecls(result)
 
-            for value in values:
-                result[value] = iterable[value]
-
-        else:
-            iterablecls = iterable.__class__
-            try:
-                result = iterablecls(values)
-
-            except:
-                result = values
+        except TypeError:
+            pass
 
     return result
