@@ -30,18 +30,17 @@ among several python versions and platforms.
 
 from __future__ import unicode_literals
 
-from sys import version_info, modules
+from sys import version_info
+
 from platform import python_implementation
-from inspect import getmodule
+
+from six import PY2, PY3
 
 __all__ = [
     '__version__',  # lib version
     'PY3', 'PY2', 'PY26', 'PY27',  # python versions
     'PYPY', 'CPYTHON', 'JYTHON', 'IRONPYTHON',  # python runtime types
-    'basestring', 'getcallargs', 'OrderedDict',  # python2.7 objects
-    'range', 'raw_input', 'xrange', 'cexec',
-    'httplib', 'winreg', 'configparser',  # common modules with python2 name
-    'copyreg', 'queue', 'socketserver', '_markupbase', 'reprlib', 'builtins'
+    'getcallargs',  # python2.7 objects
 ]
 
 # Store the version here so:
@@ -54,8 +53,6 @@ __all__ = [
 __version__ = '1.1.0'
 
 
-PY3 = version_info[0] == 3  #: python3.
-PY2 = version_info[0] == 2  #: python2.
 PY26 = PY2 and version_info[1] == 6  #: python2.6.
 PY27 = PY2 and version_info[1] == 7  #: python2.7.
 PYPY = python_implementation() == 'PyPy'  #: pypy.
@@ -64,62 +61,8 @@ JYTHON = python_implementation() == 'Jython'  #: jython.
 IRONPYTHON = python_implementation() == 'IronPython'  #: IronPython.
 
 
-def cexec(source, _globals, _locals):
-    """Common python2/3 exec function."""
-
-    exec(source, _globals, _locals)
-
-
-if PY3:  # set references to common object with different names
-    # define python3 functions with python2 names
-    basestring = str
-    range = range
-    xrange = range
-    raw_input = input
-
-    # import python3 modules with python2 module names
-    import http.client as httplib  #: http.client in python3.
-    try:
-        import winreg  #: winreg in python3.
-    except ImportError:
-        pass
-    import configparser  #: configparser in python3.
-    import copyreg  #: copyreg in python3.
-    import queue  #: queue in python3.
-    import socketserver  #: socketserver in python3.
-    import _markupbase  #: _markupbase in python3.
-    import reprlib  #: reprlib in python3.
-    import builtins  #: builtin module.
-
-    # set exec to cexec in PY3 beceause exec is a builtin function
-    setattr(getmodule(cexec), 'cexec', getattr(builtins, 'exec'))
-
-else:
-    # define python2 which could be also used in python3 environment
-    basestring = str, unicode
-    range = xrange
-    xrange = xrange
-    raw_input = raw_input
-
-    # import python2 modules which could be imported from this module
-    import httplib  #: httplib module.
-    try:
-        import _winreg as winreg
-    except ImportError:
-        pass
-    import ConfigParser as configparser  #: configparser module.
-    import copy_reg as copyreg  #: copy reg module.
-    import Queue as queue  #: queue module.
-    import SocketServer as socketserver  #: socketserver module.
-    import markupbase as _markupbase  #: markupbase module.
-    import repr as reprlib  #: repr module.
-    import __builtin__ as builtins  #: builtin module.
-
 # add functions and types if py26 which exist in py27 and py3.x
 if PY26:
-
-    # add definition of ordereddict
-    from ordereddict import OrderedDict
 
     # add functions and classes which come from
     from inspect import getargspec, ismethod
@@ -223,5 +166,4 @@ if PY26:
 else:
 
     # add builtin objects from python2.7+
-    from collections import OrderedDict
     from inspect import getcallargs

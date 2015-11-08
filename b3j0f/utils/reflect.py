@@ -24,13 +24,17 @@
 # SOFTWARE.
 # --------------------------------------------------------------------
 
-"""Python reflection tools.
-"""
+"""Python reflection tools."""
 
-from .version import PY2, range
+from __future__ import unicode_literals, absolute_import
+
 from .iterable import ensureiterable
 
 from inspect import isclass, isroutine, ismethod, getmodule
+
+from six import PY2, get_method_self, get_method_function
+
+from builtins import range
 
 __all__ = ['base_elts', 'find_embedding', 'is_inherited']
 
@@ -68,7 +72,7 @@ def base_elts(elt, cls=None, depth=None):
 
             if hasattr(elt, '__self__'):  # from the instance
 
-                instance = elt.__self__  # get instance
+                instance = get_method_self(elt)  # get instance
 
                 if instance is None and PY2:  # get base im_class if PY2
                     cls = list(elt.im_class.__bases__)
@@ -113,7 +117,10 @@ def base_elts(elt, cls=None, depth=None):
             elif isroutine(elt):
 
                 # get an elt to compare with found element
-                elt_to_compare = elt.__func__ if ismethod(elt) else elt
+                if ismethod(elt):
+                    elt_to_compare = get_method_function(elt)
+                else:
+                    elt_to_compare = elt
 
                 for _cls in cls:  # for all classes
                     # get possible base elt
@@ -121,7 +128,10 @@ def base_elts(elt, cls=None, depth=None):
 
                     if b_elt is not None:
                         # compare funcs
-                        bec = b_elt.__func__ if ismethod(b_elt) else b_elt
+                        if ismethod(b_elt):
+                            bec = get_method_function(b_elt)
+                        else:
+                            bec = b_elt
                         # if matching, add to result
                         if bec is elt_to_compare:
                             result.append(b_elt)

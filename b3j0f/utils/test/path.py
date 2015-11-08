@@ -27,8 +27,8 @@
 
 from unittest import main
 
-from b3j0f.utils.ut import UTCase
-from b3j0f.utils.path import lookup, clearcache, incache, getpath
+from ..ut import UTCase
+from ..path import lookup, clearcache, incache, getpath
 
 
 class LookUpTest(UTCase):

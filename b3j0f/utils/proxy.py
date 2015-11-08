@@ -24,15 +24,17 @@
 # SOFTWARE.
 # --------------------------------------------------------------------
 
-__all__ = [
-    'get_proxy', 'proxify_routine', 'proxify_elt', 'is_proxy', 'proxified_elt'
-]
-
 """Module in charge of creating proxies like the design pattern ``proxy``.
 
 A proxy is based on a callable element. It respects its signature but not the
 implementation.
 """
+
+from __future__ import absolute_import
+
+__all__ = [
+    'get_proxy', 'proxify_routine', 'proxify_elt', 'is_proxy', 'proxified_elt'
+]
 
 from time import time
 
@@ -50,7 +52,14 @@ from inspect import (
     getmembers, isroutine, ismethod, getargspec, getfile, isbuiltin, isclass
 )
 
-from .version import PY2, PY3, basestring
+from six import (
+    get_function_closure, get_function_code, get_function_defaults,
+    get_function_globals, get_method_function, get_method_self, exec_, PY2, PY3,
+    string_types
+)
+
+from builtins import bytes
+
 from .path import lookup
 
 # consts for interception loading
@@ -91,11 +100,14 @@ def proxify_elt(elt, bases=None, _dict=None, public=False):
     proxified_attribute_names = set()
     # ensure bases is a tuple of types
     if bases is None:
-        bases = (elt if isclass(elt) else type(elt),)
-    if isinstance(bases, basestring):
+        bases = (elt if isclass(elt) else elt.__class__,)
+
+    if isinstance(bases, string_types):
         bases = (lookup(bases),)
+
     elif isclass(bases):
         bases = (bases,)
+
     else:
         bases = tuple(bases)
 
@@ -123,11 +135,12 @@ def proxify_elt(elt, bases=None, _dict=None, public=False):
                     # get routine proxy
                     routine_proxy = proxify_routine(routine)
                     if ismethod(routine_proxy):
-                        routine_proxy = routine_proxy.__func__
+                        routine_proxy = get_method_function(routine_proxy)
                     # update proxy_dict
                     proxy_dict[name] = routine_proxy
                     # and save the proxified attribute flag
                     proxified_attribute_names.add(name)
+
     # proxify proxy_dict
     for name in proxy_dict:
         value = proxy_dict[name]
@@ -143,11 +156,14 @@ def proxify_elt(elt, bases=None, _dict=None, public=False):
                 # proxify it
                 value = proxify_routine(value)
             proxy_dict[name] = value
+
     # set default constructors if not present in proxy_dict
     if '__new__' not in proxy_dict:
         proxy_dict['__new__'] = object.__new__
+
     if '__init__' not in proxy_dict:
         proxy_dict['__init__'] = object.__init__
+
     # generate a new proxy class
     cls = type('Proxy', bases, proxy_dict)
     # instantiate proxy cls
@@ -170,7 +186,7 @@ def proxify_routine(routine, impl=None):
 
     is_method = ismethod(routine)
     if is_method:
-        function = routine.__func__
+        function = get_method_function(routine)
     else:
         function = routine
 
@@ -200,8 +216,7 @@ def proxify_routine(routine, impl=None):
 
         @wraps(function, assigned=assigned, updated=updated)
         def wrappedfunction(*args, **kwargs):
-            """Default wrap function.
-            """
+            """Default wrap function."""
 
         function = wrappedfunction
         # get params from function
@@ -222,8 +237,10 @@ def proxify_routine(routine, impl=None):
             pass
         else:
             setattr(result, wrapper_assignment, value)
+
     # set proxy module
     result.__module__ = proxify_routine.__module__
+
     # update wrapping updating
     for wrapper_update in WRAPPER_UPDATES:
         try:
@@ -237,7 +254,7 @@ def proxify_routine(routine, impl=None):
     setattr(result, __PROXIFIED__, routine)
 
     if is_method:  # create a new method
-        args = [result, routine.__self__]
+        args = [result, get_method_self(routine)]
         if PY2:
             args.append(routine.im_class)
         result = MethodType(*args)
@@ -267,10 +284,11 @@ def _compilecode(function, name, impl, args, varargs, kwargs):
 
     # define the code with the new function
     _globals = {}
-    exec(code, _globals)
+    exec_(code, _globals)
 
     # get new code
-    newco = _globals[generatedname].__code__
+    _var = _globals[generatedname]
+    newco = get_function_code(_var)
 
     # get new consts list
     newconsts = list(newco.co_consts)
@@ -302,7 +320,7 @@ def _compilecode(function, name, impl, args, varargs, kwargs):
         index += 1
 
     # get code string
-    codestr = bytes(newcode) if PY3 else "".join([chr(co) for co in newcode])
+    codestr = bytes(newcode)
 
     # get vargs
     vargs = [
@@ -310,7 +328,7 @@ def _compilecode(function, name, impl, args, varargs, kwargs):
         newco.co_flags, codestr, tuple(newconsts), newco.co_names,
         newco.co_varnames, newco.co_filename, newco.co_name,
         newco.co_firstlineno, newco.co_lnotab,
-        function.__code__.co_freevars,
+        get_function_code(function).co_freevars,
         newco.co_cellvars
     ]
     if PY3:
@@ -321,10 +339,14 @@ def _compilecode(function, name, impl, args, varargs, kwargs):
     # instanciate a new function
     if function is None or isbuiltin(function):
         result = FunctionType(codeobj, {})
+
     else:
         result = type(function)(
-            codeobj, function.__globals__, function.__name__,
-            function.__defaults__, function.__closure__
+            codeobj,
+            get_function_globals(function),
+            function.__name__,
+            get_function_defaults(function),
+            get_function_closure(function)
         )
 
     return result
@@ -338,6 +360,7 @@ def _generatecode(function, name, impl, args, varargs, kwargs):
     islambda = __LAMBDA_NAME__ == name
     if islambda:
         generatedname = '_{0}'.format(int(time()))
+
     else:
         generatedname = name
 
@@ -349,11 +372,13 @@ def _generatecode(function, name, impl, args, varargs, kwargs):
 
     if islambda:
         code = '{0} = lambda '.format(generatedname)
+
     else:
         code = 'def {0}('.format(generatedname)
 
     if args:
         code = join((code, '{0}'.format(args[0])))
+
     for arg in args[1:]:
         code = join((code, ', {0}'.format(arg)))
 
@@ -365,6 +390,7 @@ def _generatecode(function, name, impl, args, varargs, kwargs):
     if kwargs is not None:
         if args or varargs is not None:
             code = join((code, ', '))
+
         code = join((code, '**{0}'.format(kwargs)))
 
     impl_name = '_{0}'.format(randint(0, maxsize))
@@ -372,6 +398,7 @@ def _generatecode(function, name, impl, args, varargs, kwargs):
     # insert impl call
     if islambda:
         code = join((code, ': {0}('.format(impl_name)))
+
     else:
         code = join(
             (
@@ -440,7 +467,7 @@ def proxified_elt(proxy):
     """
 
     if ismethod(proxy):
-        proxy = proxy.__func__
+        proxy = get_method_function(proxy)
     result = getattr(proxy, __PROXIFIED__, None)
 
     return result
@@ -455,7 +482,7 @@ def is_proxy(elt):
     """
 
     if ismethod(elt):
-        elt = elt.__func__
+        elt = get_method_function(elt)
 
     result = hasattr(elt, __PROXIFIED__)
 

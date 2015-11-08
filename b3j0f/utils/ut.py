@@ -24,12 +24,13 @@
 # SOFTWARE.
 # --------------------------------------------------------------------
 
-"""Unit tests tools.
-"""
+"""Unit tests tools."""
 
 from unittest import TestCase
 
-from .version import PY2, PY26
+from six import string_types, PY2
+
+from .version import PY26
 
 from re import match
 
@@ -54,8 +55,7 @@ def _subset(subset, superset):
 
 
 class UTCase(TestCase):
-    """Class which enrichs TestCase with python version compatibilities.
-    """
+    """Class which enrichs TestCase with python version compatibilities."""
 
     def __init__(self, *args, **kwargs):
 
@@ -103,14 +103,14 @@ class UTCase(TestCase):
 
             def assertRegexpMatches(self, text, regexp, msg=None):
                 return self.assertTrue(
-                    match(regexp, text) if isinstance(regexp, str)
+                    match(regexp, text) if isinstance(regexp, string_types)
                     else regexp.search(text),
                     msg=msg
                 )
 
             def assertNotRegexpMatches(self, text, regexp, msg=None):
                 return self.assertIsNone(
-                    match(regexp, text) if isinstance(regexp, str)
+                    match(regexp, text) if isinstance(regexp, string_types)
                     else regexp.search(text),
                     msg=msg
                 )

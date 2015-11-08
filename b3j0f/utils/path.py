@@ -24,18 +24,14 @@
 # SOFTWARE.
 # --------------------------------------------------------------------
 
-"""Tools for managing path resolution of python objects.
-"""
+"""Tools for managing path resolution of python objects."""
 
 # ensure str are unicodes
-from __future__ import unicode_literals
+from __future__ import unicode_literals, absolute_import
 
 from inspect import ismodule, currentframe
 
-try:
-    from importlib import import_module
-except ImportError:
-    import_module = __import__
+from importlib import import_module
 
 from random import random
 
@@ -51,6 +47,7 @@ def clearcache(path=None):
     """Clear cache memory for input path.
 
     :param str path: element path to remove from cache. If None clear all cache
+    :param dict cache: cache to clear. Default is __LOOKUP_CACHE.
 
     :Example:
 
@@ -70,10 +67,9 @@ def clearcache(path=None):
     False
     """
 
-    global __LOOKUP_CACHE
-
     if path is None:
-        __LOOKUP_CACHE = {}
+        __LOOKUP_CACHE.clear()
+
     else:
         __LOOKUP_CACHE.pop(path, None)
 

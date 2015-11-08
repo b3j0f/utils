@@ -40,6 +40,8 @@ of the shape {element, {property name, property}}.
         runtime in order to avoid memory leak.
 """
 
+from __future__ import unicode_literals, absolute_import
+
 __all__ = [
     'get_properties',
     'get_first_property', 'get_first_properties',
@@ -50,7 +52,8 @@ __all__ = [
     'find_ctx', 'addproperties'
 ]
 
-from .version import PY2
+from six import PY2, string_types, get_method_self
+
 from .iterable import ensureiterable
 
 from inspect import ismethod
@@ -93,7 +96,7 @@ def find_ctx(elt):
     # if elt is ctx and elt is a method, it is possible to find the best ctx
     if ismethod(elt):
         # get instance and class of the elt
-        instance = elt.__self__
+        instance = get_method_self(elt)
         # if instance is not None, the right context is the instance
         if instance is not None:
             result = instance
@@ -109,8 +112,6 @@ def free_cache(ctx, *elts):
     cache.
     """
 
-    global __STATIC_ELEMENTS_CACHE__, __UNHASHABLE_ELTS_CACHE__
-
     for elt in elts:
         if isinstance(elt, Hashable):
             cache = __STATIC_ELEMENTS_CACHE__
@@ -121,8 +122,8 @@ def free_cache(ctx, *elts):
             del cache[elt]
 
     if not elts:
-        __STATIC_ELEMENTS_CACHE__ = {}
-        __UNHASHABLE_ELTS_CACHE__ = {}
+        __STATIC_ELEMENTS_CACHE__.clear()
+        __UNHASHABLE_ELTS_CACHE__.clear()
 
 
 def _ctx_elt_properties(elt, ctx=None, create=False):
@@ -199,7 +200,7 @@ def get_properties(elt, keys=None, ctx=None):
     """
 
     # initialize keys if str
-    if isinstance(keys, str):
+    if isinstance(keys, string_types):
         keys = (keys,)
 
     result = _get_properties(elt, keys=keys, local=False, ctx=ctx)
@@ -243,7 +244,7 @@ def get_first_properties(elt, keys=None, ctx=None):
     """
 
     # ensure keys is an iterable if not None
-    if isinstance(keys, str):
+    if isinstance(keys, string_types):
         keys = (keys,)
 
     result = _get_properties(elt, keys=keys, first=True, ctx=ctx)
@@ -287,7 +288,7 @@ def get_local_properties(elt, keys=None, ctx=None):
     :rtype: dict
     """
 
-    if isinstance(keys, str):
+    if isinstance(keys, string_types):
         keys = (keys,)
 
     result = _get_properties(elt, keys=keys, local=True, ctx=ctx)
@@ -767,7 +768,8 @@ def addproperties(
     :return: cls decorator.
     """
 
-    names = ensureiterable(names, exclude=str)  # ensure names is a list
+    # ensure names is a list
+    names = ensureiterable(names, exclude=string_types)
 
     if isinstance(bfget, MethodType):
         finalbfget = lambda self, name: bfget(name)
@@ -810,6 +812,7 @@ def addproperties(
             protectedattrname = _protectedattrname(name)
             # try to find an existing property
             existingproperty = getattr(cls, name, None)
+
             if isinstance(existingproperty, property):
                 _fget = existingproperty.fget
                 _fset = existingproperty.fset
@@ -820,50 +823,52 @@ def addproperties(
 
             # construct existing/default getter
             if _fget is None:
-                def _fget(name, protectedattrname):
+                def _fget(protectedattrname):
                     """Simple getter wrapper."""
                     def _fget(self):
                         """Simple getter."""
                         return getattr(self, protectedattrname, None)
                     return _fget
-                _fget = _fget(name, protectedattrname)
+                _fget = _fget(protectedattrname)
                 _fget.__doc__ = 'Get this {0}.\n:return: this {0}.'.format(
                     name
                 )
             # transform method to function in order to add self in parameters
             if isinstance(_fget, MethodType):
                 final_fget = lambda self: _fget()
+
             else:
                 final_fget = _fget
 
             # construct existing/default setter
             if _fset is None:
-                def _fset(name, protectedattrname):
+                def _fset(protectedattrname):
                     """Simple setter wrapper."""
                     def _fset(self, value):
                         """Simple setter."""
                         setattr(self, protectedattrname, value)
                     return _fset
-                _fset = _fset(name, protectedattrname)
+                _fset = _fset(protectedattrname)
                 _fset.__doc__ = (
                     'Change of {0}.\n:param {0}: {0} to use.'.format(name)
                 )
             # transform method to function in order to add self in parameters
             if isinstance(_fset, MethodType):
                 final_fset = lambda self, value: _fset(value)
+
             else:
                 final_fset = _fset
 
             # construct existing/default deleter
             if _fdel is None:
-                def _fdel(name, protectedattrname):
+                def _fdel(protectedattrname):
                     """Simple deleter wrapper."""
                     def _fdel(self):
                         """Simple deleter."""
                         if hasattr(self, protectedattrname):
                             delattr(self, protectedattrname)
                     return _fdel
-                _fdel = _fdel(name, protectedattrname)
+                _fdel = _fdel(protectedattrname)
                 _fdel.__doc__ = 'Delete this {0}.'.format(name)
             # transform method to function in order to add self in parameters
             if isinstance(_fdel, MethodType):

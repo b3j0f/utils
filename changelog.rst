@@ -1,6 +1,17 @@
 ChangeLog
 =========
 
+1.2.0 (2015/11/8)
+-----------------
+
+- add dependency to the modules six and future and remove version functions.
+- use relative imports in UTs.
+
+1.1.0 (2015/11/8)
+-----------------
+
+- add functions last, itemat and slice in the iterable module.
+
 1.0.1 (2015/10/29)
 ------------------
 

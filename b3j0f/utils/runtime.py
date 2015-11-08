@@ -45,11 +45,13 @@ from opcode import opmap, HAVE_ARGUMENT, EXTENDED_ARG
 
 from types import FunctionType, ModuleType
 
-from .version import PY3, cexec, builtins
+from six import exec_, PY3
+from six.moves import builtins
+
+from builtins import bytes
 
 __all__ = [
-    'SAFE_BUILTINS', 'safe_eval', 'safe_exec',
-    'bind_all', 'make_constants'
+    'SAFE_BUILTINS', 'safe_eval', 'safe_exec', 'bind_all', 'make_constants'
 ]
 
 
@@ -110,7 +112,7 @@ def safe_eval(source, _globals=None, _locals=None):
 def safe_exec(source, _globals=None, _locals=None):
     """Do a safe python execution."""
 
-    return _safe_processing(cexec, source, _globals, _locals)
+    return _safe_processing(exec_, source, _globals, _locals)
 
 
 STORE_GLOBAL = opmap['STORE_GLOBAL']
@@ -123,11 +125,11 @@ JUMP_FORWARD = opmap['JUMP_FORWARD']
 WRAPPER_ASSIGNMENTS = ('__doc__', '__annotations__', '__dict__', '__module__')
 
 
-def _make_constants(f, builtin_only=False, stoplist=None, verbose=None):
+def _make_constants(func, builtin_only=False, stoplist=None, verbose=None):
     """Generate new function where code is an input function code with all
     LOAD_GLOBAL statements changed to LOAD_CONST statements.
 
-    :param function f: code function to transform.
+    :param function func: code function to transform.
     :param bool builtin_only: only transform builtin objects.
     :param list stoplist: attribute names to not transform.
     :param function verbose: logger function which takes in parameter a message
@@ -136,15 +138,15 @@ def _make_constants(f, builtin_only=False, stoplist=None, verbose=None):
         Be sure global attributes to transform are not resolved dynamically.
     """
 
-    result = f
+    result = func
 
     if stoplist is None:
         stoplist = []
 
     try:
-        fcode = f.__code__
+        fcode = func.__code__
     except AttributeError:
-        return f        # Jython doesn't have a __code__ attribute.
+        return func        # Jython doesn't have a __code__ attribute.
     newcode = list(fcode.co_code) if PY3 else [ord(co) for co in fcode.co_code]
     newconsts = list(fcode.co_consts)
     names = fcode.co_names
@@ -153,9 +155,9 @@ def _make_constants(f, builtin_only=False, stoplist=None, verbose=None):
     env = vars(builtins).copy()
     if builtin_only:
         stoplist = dict.fromkeys(stoplist)
-        stoplist.update(f.__globals__)
+        stoplist.update(func.__globals__)
     else:
-        env.update(f.__globals__)
+        env.update(func.__globals__)
 
     # First pass converts global lookups into constants
     changed = False
@@ -163,7 +165,7 @@ def _make_constants(f, builtin_only=False, stoplist=None, verbose=None):
     while i < codelen:
         opcode = newcode[i]
         if opcode in (EXTENDED_ARG, STORE_GLOBAL):
-            return f    # for simplicity, only optimize common cases
+            return func    # for simplicity, only optimize common cases
         if opcode == LOAD_GLOBAL:
             oparg = newcode[i + 1] + (newcode[i + 2] << 8)
             name = fcode.co_names[oparg]
@@ -239,9 +241,8 @@ def _make_constants(f, builtin_only=False, stoplist=None, verbose=None):
 
     if changed:
 
-        codestr = bytes(newcode) if PY3 else ''.join(
-            [chr(co) for co in newcode]
-        )
+        codestr = bytes(newcode)
+
         vargs = [
             fcode.co_argcount, fcode.co_nlocals, fcode.co_stacksize,
             fcode.co_flags, codestr, tuple(newconsts), fcode.co_names,
@@ -253,14 +254,14 @@ def _make_constants(f, builtin_only=False, stoplist=None, verbose=None):
             vargs.insert(1, fcode.co_kwonlyargcount)
 
         codeobj = type(fcode)(*vargs)
-        result = type(f)(
-            codeobj, f.__globals__, f.__name__, f.__defaults__, f.__closure__
+        result = type(func)(
+            codeobj, func.__globals__, func.__name__, func.__defaults__, func.__closure__
         )
 
-        # set f attributes to result
+        # set func attributes to result
         for prop in WRAPPER_ASSIGNMENTS:
             try:
-                attr = getattr(f, prop)
+                attr = getattr(func, prop)
             except AttributeError:
                 pass
             else:
@@ -335,4 +336,5 @@ def make_constants(builtin_only=False, stoplist=None, verbose=None):
 
     if isinstance(builtin_only, type(make_constants)):
         raise ValueError("The bind_constants decorator must have arguments.")
-    return lambda f: _make_constants(f, builtin_only, stoplist, verbose)
+
+    return lambda func: _make_constants(func, builtin_only, stoplist, verbose)

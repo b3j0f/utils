@@ -27,9 +27,9 @@
 
 from unittest import main
 
-from b3j0f.utils.ut import UTCase
-from b3j0f.utils.version import range
-from b3j0f.utils.runtime import (
+from ..ut import UTCase
+
+from ..runtime import (
     SAFE_BUILTINS, safe_eval, safe_exec,
     make_constants, bind_all
 )

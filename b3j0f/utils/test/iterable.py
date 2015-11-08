@@ -27,9 +27,10 @@
 
 from unittest import main
 
-from b3j0f.utils.ut import UTCase
-from b3j0f.utils.iterable import first, ensureiterable, isiterable
-from b3j0f.utils.version import basestring
+from ..ut import UTCase
+from ..iterable import first, ensureiterable, isiterable
+
+from six import string_types
 
 
 class EnsureIterableTest(UTCase):
@@ -50,7 +51,7 @@ class EnsureIterableTest(UTCase):
     def test_exclude(self):
 
         l = ""
-        iterable = ensureiterable(l, exclude=basestring)
+        iterable = ensureiterable(l, exclude=string_types)
         self.assertTrue(iterable)
 
 
@@ -75,7 +76,7 @@ class IsIterable(UTCase):
         Test iterable with a tuple of exclude types
         """
 
-        self.assertFalse(isiterable([], exclude=(list, basestring)))
+        self.assertFalse(isiterable([], exclude=(list,) + string_types))
 
     def test_not_iterable(self):
         """

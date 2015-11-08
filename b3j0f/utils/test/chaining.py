@@ -27,8 +27,8 @@
 
 from unittest import main
 
-from b3j0f.utils.ut import UTCase
-from b3j0f.utils.chaining import Chaining, ListChaining
+from ..ut import UTCase
+from ..chaining import Chaining, ListChaining
 
 
 class ChainingTest(UTCase):

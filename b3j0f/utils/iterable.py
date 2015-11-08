@@ -24,10 +24,13 @@
 # SOFTWARE.
 # --------------------------------------------------------------------
 
-"""Provides tools to manage iterable types
-"""
+"""Provides tools to manage iterable types."""
+
+from __future__ import absolute_import
 
 __all__ = ['isiterable', 'ensureiterable', 'first']
+
+from sys import maxsize
 
 from collections import Iterable
 
@@ -95,21 +98,109 @@ def first(iterable, default=None):
 
     :Example:
 
-    >>> first('test')
+    >>> first('tests')
     't'
-    >>> first([])
-    None
     >>> first('', default='test')
     'test'
+    >>> first([])
+    None
     """
+
+    result = default
 
     # start to get the iterable iterator (raises TypeError if iter)
     iterator = iter(iterable)
     # get first element
     try:
         result = next(iterator)
-    except StopIteration:
-        # if no element exist, result equals default
-        result = default
+    except StopIteration: # if no element exist, result equals default
+        pass
+
+    return result
+
+def last(iterable, default=None):
+    """Try to get the last iterable item by successive iteration on it."""
+
+    result = default
+
+    iterator = iter(iterable)
+
+    while True:
+        try:
+            result = next(iterator)
+
+        except StopIteration:
+            break
+
+    return result
+
+def itemat(iterable, index):
+    """Try to get the item at index position in iterable after iterate on
+    iterable items."""
+
+    result = None
+
+    iterator = iter(iterable)
+
+    if index < 0:  # ensure index is positive
+        index += len(iterable)
+
+    while index >= 0:
+        try:
+            value = next(iterator)
+
+        except StopIteration:
+            break
+
+        else:
+            if index == 0:
+                result = value
+                break
+            index -= 1
+
+    return result
+
+def slice(iterable, lower=0, upper=maxsize):
+    """Apply a slice on input iterable."""
+
+    if isinstance(iterable, (str, list, tuple)):
+        result = iterable[lower, upper]
+
+    else:
+        values = []
+
+        if lower < 0:  # ensure lower is positive
+            lower += len(iterable)
+
+        if upper < 0:  # ensure upper is positive
+            upper += len(iterable)
+
+        if upper > lower:
+            iterator = iter(iterable)
+
+            for index in range(0, lower + upper):
+                try:
+                    value = next(iterator)
+
+                except StopIteration:
+                    break
+
+                else:
+                    if index >= lower:
+                        values.append(value)
+
+        if isinstance(iterable, dict):
+            result = {}
+
+            for value in values:
+                result[value] = iterable[value]
+
+        else:
+            iterablecls = iterable.__class__
+            try:
+                result = iterablecls(values)
+
+            except:
+                result = values
 
     return result

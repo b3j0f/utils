@@ -31,9 +31,10 @@ from time import sleep
 
 from random import random
 
-from b3j0f.utils.ut import UTCase
-from b3j0f.utils.version import PY2, range
-from b3j0f.utils.property import (
+from six import PY2
+
+from ..ut import UTCase
+from ..property import (
     get_properties, put_properties, del_properties,
     get_local_properties, get_local_property,
     firsts, remove_ctx,

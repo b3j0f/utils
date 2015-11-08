@@ -57,8 +57,7 @@ KEYWORDS = [
     'common'
 ]
 
-# add ordereddict if version for 2.6.x python version
-DEPENDENCIES = ['ordereddict']
+DEPENDENCIES = ['future', 'six']
 
 DESCRIPTION = 'Set of tools and utilities useful in python projects'
 

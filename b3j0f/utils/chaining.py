@@ -32,6 +32,8 @@ Chaining object itself, allowing multiple calls to object methods to be invoked
 in a concise statement.
 """
 
+from __future__ import unicode_literals, absolute_import
+
 __all__ = ['Chaining', 'ListChaining']
 
 
