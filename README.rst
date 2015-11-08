@@ -95,18 +95,33 @@ test
 Iterable
 --------
 
->>> from b3j0f.utils.iterable import is_iterable, first
+>>> from b3j0f.utils.iterable import is_iterable, first, last, itemat, sliceit
 >>> is_iterable(1)
 False
->>> is_iterable("aze")
+>>> is_iterable('aze')
 True
->>> is_iterable("aze", exclude=str)
+>>> is_iterable('aze', exclude=str)
 False
 
->>> first("aze")
-"a"
->>> first("", default="test")
-"test"
+>>> from collections import OrderedDict
+>>> od = OrderedDict((('1', 2), ('3', 4), ('5', 6)))
+>>> first(od)
+'1'
+>>> first({}, default='test')
+'test'
+
+>>> last(od)
+'5'
+>>> last('', default='test')
+'test'
+
+>>> itemat(od, -1)
+'5'
+>>> itemat(od, 1)
+'3'
+
+>>> sliceit(od, -2, -1)
+OrderedDict([('3', 4)])
 
 Path
 ----
@@ -190,10 +205,9 @@ open does not exist
 Version
 -------
 
->>> from b3j0f.utils.version import builtins, getargspec
->>> # builtins is the builtin module whatever running python v>2
->>> # and getargspec is same function from python>2.7 for python2.6
->>> from b3j0f.utils.version import PY3, PY26, PY27
+>>> from b3j0f.utils.version import getargspec
+>>> # getargspec is same function from python>2.7 for python2.6
+>>> from b3j0f.utils.version import PY3, PY2, PY26, PY27
 >>> # PY3 is True if python version is 3, etc.
 
 UT
