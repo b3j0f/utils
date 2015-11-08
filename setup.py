@@ -25,7 +25,7 @@
 # SOFTWARE.
 # --------------------------------------------------------------------
 
-"""b3j0f project building script."""
+"""b3j0f.utils building script."""
 
 from setuptools import setup, find_packages
 
