@@ -28,7 +28,7 @@
 from unittest import main
 
 from ..ut import UTCase
-from ..path import lookup, clearcache, incache, getpath
+from ..path import lookup, clearcache, incache, getpath, alias
 
 
 class LookUpTest(UTCase):
@@ -166,6 +166,50 @@ class LookUpGetPathTest(UTCase):
         _open = lookup(getpath(f))
         self.assertIs(_open, f)
 
+
+class AliasTest(UTCase):
+    """Test the function alias."""
+
+    def setUp(self):
+
+        super(AliasTest, self).setUp()
+
+        self.aliasname = 'test'
+
+    def _assertalias(self, element):
+
+        self.assertTrue(incache(self.aliasname))
+
+        aliasedelement = lookup(self.aliasname)
+
+        self.assertIs(element, aliasedelement)
+
+    def test_variable(self):
+        """Test to make an alias from a variable."""
+
+        TEST = 2
+
+        alias(self.aliasname)(TEST)
+
+        self._assertalias(TEST)
+
+    def test_class(self):
+        """Test to make an alias from a class."""
+
+        @alias(self.aliasname)
+        class Test(object):
+            """Test class"""
+
+        self._assertalias(Test)
+
+    def test_function(self):
+        """Test to make an alias from a function."""
+
+        @alias(self.aliasname)
+        def test():
+            """test function"""
+
+        self._assertalias(test)
 
 if __name__ == '__main__':
     main()

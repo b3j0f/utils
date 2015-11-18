@@ -1,6 +1,12 @@
 ChangeLog
 =========
 
+1.3.0 (2015/11/18)
+------------------
+
+- add the decorator b3j0f.path.alias function for quick registering python objects.
+- change contact address.
+
 1.2.0 (2015/11/8)
 -----------------
 

@@ -37,7 +37,7 @@ from random import random
 
 from .version import PY26
 
-__all__ = ['clearcache', 'incache', 'lookup', 'getpath']
+__all__ = ['clearcache', 'incache', 'lookup', 'getpath', 'alias']
 
 #: lookup cache
 __LOOKUP_CACHE = {}
@@ -214,3 +214,24 @@ def getpath(element):
         '{0}.{1}'.format(element.__module__, element.__name__)
 
     return result
+
+
+def alias(_id):
+    """Decorator dedicated to make an alias of a decorated element in order to
+    register it in the lookup cache.
+
+    :param str _id: alias identifier.
+
+    :Example:
+
+    >>> alias()
+    """
+
+    def _register_elt(elt):
+        """Register a specific element in the lookup cache."""
+
+        __LOOKUP_CACHE[_id] = elt
+
+        return elt
+
+    return _register_elt
