@@ -92,14 +92,19 @@ def incache(path):
     return path in __LOOKUP_CACHE
 
 
-def lookup(path, cache=True):
+def lookup(path, cache=True, scope=None):
     """Get element reference from input element.
+
+    The element can be a builtin/globals/scope object or is resolved from the
+    current execution stack.
 
     :limitations: it does not resolve class methods or static values such as
         True, False, numbers, string and keywords.
     :param str path: full path to a python element.
     :param bool cache: if True (default), permits to reduce time complexity for
         lookup resolution in using cache memory to save resolved elements.
+    :param dict scope: object scrope from where find path. For example, this
+        scope can be locals(). Default is globals().
     :return: python object which is accessible through input path
         or raise an exception if the path is wrong.
     :rtype: object
@@ -107,6 +112,7 @@ def lookup(path, cache=True):
     """
 
     result = None
+
     found = path and cache and path in __LOOKUP_CACHE
 
     if found:
@@ -114,74 +120,86 @@ def lookup(path, cache=True):
 
     elif path:
 
-        # we generate a result in order to accept the result such as a None
-        generated_result = random()
-        result = generated_result
+        if scope is None:
+            scope = globals()
 
-        components = path.split('.')
-        index = 0
-        components_len = len(components)
+        try:  # search among scope
+            result = eval(path, scope)
 
-        module_name = components[0]
+        except NameError:
 
-        # try to resolve an absolute path
-        try:
-            result = import_module(module_name)
+            # we generate a result in order to accept the result such as a None
+            generated_result = random()
+            result = generated_result
 
-        except ImportError:
-            # resolve element globals or locals of the from previous frame
-            previous_frame = currentframe().f_back
+            components = path.split('.')
+            index = 0
+            components_len = len(components)
 
-            if module_name in previous_frame.f_locals:
-                result = previous_frame.f_locals[module_name]
-            elif module_name in previous_frame.f_globals:
-                result = previous_frame.f_globals[module_name]
+            module_name = components[0]
 
-        found = result is not generated_result
+            # try to resolve an absolute path
+            try:
+                result = import_module(module_name)
 
-        if found:
+            except ImportError:
+                # resolve element globals or locals of the from previous frame
+                previous_frame = currentframe().f_back
 
-            if components_len > 1:
+                if module_name in previous_frame.f_locals:
+                    result = previous_frame.f_locals[module_name]
 
-                index = 1
+                elif module_name in previous_frame.f_globals:
+                    result = previous_frame.f_globals[module_name]
 
-                # try to import all sub-modules/packages
-                try:  # check if name is defined from an external module
-                    # find the right module
-                    while index < components_len:
-                        module_name = '{0}.{1}'.format(
-                            module_name, components[index]
-                        )
-                        result = import_module(module_name)
-                        index += 1
+            found = result is not generated_result
 
-                except ImportError:
-                    # path sub-module content
-                    try:
-                        if PY26:  # when __import__ is used
-                            index = 1  # restart count of pathing
+            if found:
+
+                if components_len > 1:
+
+                    index = 1
+
+                    # try to import all sub-modules/packages
+                    try:  # check if name is defined from an external module
+                        # find the right module
                         while index < components_len:
-                            result = getattr(result, components[index])
-                            index += 1
-
-                    except AttributeError:
-                        raise ImportError(
-                            'Wrong path {0} at {1}'.format(
-                                path, components[:index]
+                            module_name = '{0}.{1}'.format(
+                                module_name, components[index]
                             )
-                        )
-                else:  # in case of PY26
-                    if PY26:
-                        index = 1
-                        while index < components_len:
-                            result = getattr(result, components[index])
+                            result = import_module(module_name)
                             index += 1
 
-            # save in cache if found
-            if cache:
-                __LOOKUP_CACHE[path] = result
+                    except ImportError:
+                        # path sub-module content
+                        try:
+                            if PY26:  # when __import__ is used
+                                index = 1  # restart count of pathing
+                            while index < components_len:
+                                result = getattr(result, components[index])
+                                index += 1
 
-    if not found:
+                        except AttributeError:
+                            raise ImportError(
+                                'Wrong path {0} at {1}'.format(
+                                    path, components[:index]
+                                )
+                            )
+                    else:  # in case of PY26
+                        if PY26:
+                            index = 1
+                            while index < components_len:
+                                result = getattr(result, components[index])
+                                index += 1
+
+        else:
+            found = True
+
+    if found:
+        if cache:  # save in cache if found
+            __LOOKUP_CACHE[path] = result
+
+    else:
         raise ImportError('Wrong path {0}'.format(path))
 
     return result

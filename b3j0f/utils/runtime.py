@@ -95,7 +95,7 @@ def _safe_processing(nsafefn, source, _globals=None, _locals=None):
     """
 
     if _globals is None:
-        _globals = SAFE_BUILTINS.copy()
+        _globals = SAFE_BUILTINS
 
     else:
         _globals.update(SAFE_BUILTINS)

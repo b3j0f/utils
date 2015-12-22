@@ -126,6 +126,23 @@ class LookUpTest(UTCase):
         lookup(path, cache=False)
         self.assertFalse(incache(path))
 
+    def test_scope(self):
+        """Test the lookup function with a specific scope."""
+
+        expression = 'testy'
+
+        self.assertRaises(ImportError, lookup, expression)
+
+        scope = {expression: None}
+
+        result = lookup(expression, scope=scope, cache=True)
+
+        self.assertIsNone(result)
+
+        result = lookup(expression, scope=scope)
+
+        self.assertIsNone(result)
+
 
 class GetPathTest(UTCase):
 
