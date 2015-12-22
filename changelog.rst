@@ -1,6 +1,13 @@
 ChangeLog
 =========
 
+1.4.0 (2015/12/22)
+------------------
+
+- add the parameter `scope` in the function `path.lookup`.
+- add safe parameter in the function `path.lookup`.
+- use static safe scope in the module `runtime`.
+
 1.3.0 (2015/11/18)
 ------------------
 

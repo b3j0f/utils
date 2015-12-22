@@ -143,6 +143,21 @@ class LookUpTest(UTCase):
 
         self.assertIsNone(result)
 
+    def test_safe(self):
+        """Test the functino lookup with safe."""
+
+        expr = 'open'
+
+        self.assertRaises(ImportError, lookup, expr, safe=True)
+
+        res = lookup(expr)
+
+        self.assertIs(res, open)
+
+        res = lookup(expr, safe=True, scope={expr: expr})
+
+        self.assertEqual(expr, expr)
+
 
 class GetPathTest(UTCase):
 
@@ -204,11 +219,11 @@ class AliasTest(UTCase):
     def test_variable(self):
         """Test to make an alias from a variable."""
 
-        TEST = 2
+        test = 2
 
-        alias(self.aliasname)(TEST)
+        alias(self.aliasname)(test)
 
-        self._assertalias(TEST)
+        self._assertalias(test)
 
     def test_class(self):
         """Test to make an alias from a class."""

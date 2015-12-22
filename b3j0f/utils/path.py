@@ -36,6 +36,7 @@ from importlib import import_module
 from random import random
 
 from .version import PY26
+from .runtime import safe_eval
 
 __all__ = ['clearcache', 'incache', 'lookup', 'getpath', 'alias']
 
@@ -92,7 +93,7 @@ def incache(path):
     return path in __LOOKUP_CACHE
 
 
-def lookup(path, cache=True, scope=None):
+def lookup(path, cache=True, scope=None, safe=False):
     """Get element reference from input element.
 
     The element can be a builtin/globals/scope object or is resolved from the
@@ -105,6 +106,8 @@ def lookup(path, cache=True, scope=None):
         lookup resolution in using cache memory to save resolved elements.
     :param dict scope: object scrope from where find path. For example, this
         scope can be locals(). Default is globals().
+    :param bool safe: use lookup in a safe context. A safe context avoid to
+        reach builtins function with I/O consequences.
     :return: python object which is accessible through input path
         or raise an exception if the path is wrong.
     :rtype: object
@@ -120,11 +123,10 @@ def lookup(path, cache=True, scope=None):
 
     elif path:
 
-        if scope is None:
-            scope = globals()
+        _eval = safe_eval if safe else eval
 
         try:  # search among scope
-            result = eval(path, scope)
+            result = _eval(path, scope)
 
         except NameError:
 
@@ -242,7 +244,14 @@ def alias(_id):
 
     :Example:
 
-    >>> alias()
+    >>> alias('halfsonofzeus', 'hercules')
+    'hercules'
+    >>> lookup('halfsonofzeus')
+    'hercules'
+    >>> @alias('cube')
+    >>> def cube(value): return value ** value ** value
+    >>> lookpath('cube')(2)
+    8
     """
 
     def _register_elt(elt):
