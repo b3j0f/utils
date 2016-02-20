@@ -45,10 +45,12 @@ from opcode import opmap, HAVE_ARGUMENT, EXTENDED_ARG
 
 from types import FunctionType, ModuleType
 
+from functools import reduce
+
 from six import exec_, PY3
 from six.moves import builtins
 
-from builtins import bytes
+
 
 __all__ = [
     'SAFE_BUILTINS', 'safe_eval', 'safe_exec', 'bind_all', 'make_constants',
@@ -259,7 +261,11 @@ def _make_constants(func, builtin_only=False, stoplist=None, verbose=None):
 
     if changed:
 
-        codestr = bytes(newcode)
+        if PY3:
+            codestr = bytes(newcode)
+
+        else:
+            codestr = reduce(lambda x, y: x + y, (chr(b) for b in newcode))
 
         vargs = [
             fcode.co_argcount, fcode.co_nlocals, fcode.co_stacksize,
