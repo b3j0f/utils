@@ -32,6 +32,7 @@ from ..path import lookup, clearcache, incache, getpath, alias
 
 
 class LookUpTest(UTCase):
+    """Test the function lookup."""
 
     def setUp(self):
         pass
@@ -75,16 +76,16 @@ class LookUpTest(UTCase):
         Test lookup function
         """
 
-        f = lookup('b3j0f.utils.path.lookup')
-        self.assertIs(f, lookup)
+        func = lookup('b3j0f.utils.path.lookup')
+        self.assertIs(func, lookup)
 
     def test_method(self):
         """
         Test lookup method
         """
 
-        m = lookup('b3j0f.utils.test.path.LookUpTest.test_method')
-        self.assertEqual(m, LookUpTest.test_method)
+        method = lookup('b3j0f.utils.test.path.LookUpTest.test_method')
+        self.assertEqual(method, LookUpTest.test_method)
 
     def test_local(self):
         """
@@ -92,10 +93,10 @@ class LookUpTest(UTCase):
         """
 
         def f_test():
-            pass
+            """test function."""
 
-        l = lookup('f_test')
-        self.assertIs(l, f_test)
+        local = lookup('f_test')
+        self.assertIs(local, f_test)
 
     def test_notfound(self):
         """
@@ -160,6 +161,7 @@ class LookUpTest(UTCase):
 
 
 class GetPathTest(UTCase):
+    """Test the function path."""
 
     def test_builtin(self):
         """
@@ -179,6 +181,7 @@ class GetPathTest(UTCase):
 
 
 class LookUpGetPathTest(UTCase):
+    """Test the function lookup."""
 
     def test_lookup_getpath(self):
         """
@@ -194,9 +197,9 @@ class LookUpGetPathTest(UTCase):
         Test getpath + lookup
         """
 
-        f = open
-        _open = lookup(getpath(f))
-        self.assertIs(_open, f)
+        func = open
+        _open = lookup(getpath(func))
+        self.assertIs(_open, func)
 
 
 class AliasTest(UTCase):
@@ -209,6 +212,7 @@ class AliasTest(UTCase):
         self.aliasname = 'test'
 
     def _assertalias(self, element):
+        """Assert input element is a right alias."""
 
         self.assertTrue(incache(self.aliasname))
 

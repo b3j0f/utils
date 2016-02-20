@@ -28,7 +28,10 @@
 
 from __future__ import absolute_import
 
-__all__ = ['isiterable', 'ensureiterable', 'first', 'last', 'itemat', 'sliceit']
+__all__ = [
+    'isiterable', 'ensureiterable', 'first', 'last', 'itemat', 'sliceit',
+    'hashiter'
+]
 
 from collections import Iterable
 
@@ -240,5 +243,37 @@ def sliceit(iterable, lower=0, upper=None):
 
         except TypeError:
             pass
+
+    return result
+
+
+def hashiter(iterable):
+    """Try to hash input iterable in doing the sum of its content if not
+    hashable.
+
+    Hash method on not iterable depends on type:
+
+        - dict: sum of (hash(key) + 1) * (hash(value) + 1).
+        - Otherwise: sum of (pos + 1) * (hash(item) + 1)."""
+
+    result = 0
+
+    try:
+        result = hash(iterable)
+
+    except TypeError:
+
+        isdict = isinstance(iterable, dict)
+
+        for index, entry in enumerate(list(iterable)):
+            entryhash = hashiter(entry) + 1
+
+            if isdict:
+                entryhash *= hashiter(iterable[entry]) + 1
+
+            else:
+                entryhash *= index + 1
+
+            result += entryhash
 
     return result

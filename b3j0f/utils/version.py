@@ -50,7 +50,7 @@ __all__ = [
 # thanks to https://github.com/pycontribs/jira/blob/master/jira/version.py
 
 #: project version
-__version__ = '1.4.0'
+__version__ = '1.4.1'
 
 
 PY26 = PY2 and version_info[1] == 6  #: python2.6.

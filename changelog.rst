@@ -1,6 +1,11 @@
 ChangeLog
 =========
 
+1.4.1 (2015/02/21)
+------------------
+
+- add the function iterable.hashiter in order to hash not hashable iterables.
+
 1.4.0 (2015/12/22)
 ------------------
 

@@ -30,7 +30,9 @@ from __future__ import absolute_import
 from unittest import main
 
 from ..ut import UTCase
-from ..iterable import first, ensureiterable, isiterable, last, itemat, sliceit
+from ..iterable import (
+    first, ensureiterable, isiterable, last, itemat, sliceit, hashiter
+)
 
 from random import random
 
@@ -355,6 +357,57 @@ class SliceIt(UTCase, _Set):
                         val = _type(val)
 
                 self.assertEqual(val, value)
+
+
+class HashIterTest(UTCase):
+    """Test the hashiter function."""
+
+    def test_hashable(self):
+        """Test to hash an hashable object."""
+
+        test = 'test'
+
+        result = hashiter(test)
+
+        self.assertEqual(result, hash(test))
+
+    def test_list(self):
+        """Test to hash a list."""
+
+        test = ['test', 1, list()]
+
+        result = hashiter(test)
+
+        self.assertEqual(
+            result,
+            (hash('test') + 1) * 1 +
+            (hash(1) + 1) * 2 + (hashiter([]) + 1) * 3
+        )
+
+    def test_set(self):
+        """Test to hash a set."""
+
+        test = set([1, 2, 3])
+
+        result = hashiter(test)
+
+        self.assertEqual(
+            result,
+            (hash(1) + 1) * 1 + (hash(2) + 1) * 2 + (hash(3) + 1) * 3
+        )
+
+    def test_dict(self):
+        """Test to hash a dict."""
+
+        test = {'test0': 0, 'test1': 1}
+
+        result = hashiter(test)
+
+        self.assertEqual(
+            result,
+            (hash('test0') + 1) * (hash(0) + 1) +
+            (hash('test1') + 1) * (hash(1) + 1)
+        )
 
 
 if __name__ == '__main__':

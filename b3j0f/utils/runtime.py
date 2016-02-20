@@ -51,7 +51,8 @@ from six.moves import builtins
 from builtins import bytes
 
 __all__ = [
-    'SAFE_BUILTINS', 'safe_eval', 'safe_exec', 'bind_all', 'make_constants'
+    'SAFE_BUILTINS', 'safe_eval', 'safe_exec', 'bind_all', 'make_constants',
+    'singleton_per_scope'
 ]
 
 
@@ -61,6 +62,23 @@ BUILTIN_IO_PROPS = [
     'globals', 'help', 'input', 'intern', 'license', 'locals', 'open', 'print',
     'quit', 'raw_input', 'reload'
 ]  #: set of builtin objects to remove from a safe builtin.
+
+
+SINGLETONS_PER_SCOPES = {}
+
+def singleton_per_scope(_cls, _scope=None, _renew=False, *args, **kwargs):
+    """Instanciate a singleton per scope."""
+
+    result = None
+
+    singletons = SINGLETONS_PER_SCOPES.setdefault(_scope, {})
+
+    if _renew or _cls not in singletons:
+        singletons[_cls] = _cls(*args, **kwargs)
+
+    result = singletons[_cls]
+
+    return result
 
 
 def _safebuiltins():
