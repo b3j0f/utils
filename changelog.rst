@@ -5,6 +5,7 @@ ChangeLog
 ------------------
 
 - add the function iterable.hashiter in order to hash not hashable iterables.
+- add runtime.getcodeobj function in order to produce a code object from old code object.
 
 1.4.0 (2015/12/22)
 ------------------

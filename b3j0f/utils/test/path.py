@@ -68,8 +68,8 @@ class LookUpTest(UTCase):
         Test lookup class
         """
 
-        cls = lookup('b3j0f.utils.test.path.LookUpTest')
-        self.assertIs(cls, LookUpTest)
+        cls = lookup('object')
+        self.assertIs(cls, object)
 
     def test_function(self):
         """
@@ -84,7 +84,11 @@ class LookUpTest(UTCase):
         Test lookup method
         """
 
-        method = lookup('b3j0f.utils.test.path.LookUpTest.test_method')
+        prefix = __name__
+        if __name__ != '__main__':
+            prefix = 'b3j0f.utils.test.path'
+
+        method = lookup('{0}.LookUpTest.test_method'.format(prefix))
         self.assertEqual(method, LookUpTest.test_method)
 
     def test_local(self):
@@ -177,7 +181,8 @@ class GetPathTest(UTCase):
         """
 
         cls_path = getpath(GetPathTest)
-        self.assertEqual(cls_path, 'b3j0f.utils.test.path.GetPathTest')
+        pre = '__main__' if __name__ == '__main__' else 'b3j0f.utils.test.path'
+        self.assertEqual(cls_path, '{0}.GetPathTest'.format(pre))
 
 
 class LookUpGetPathTest(UTCase):

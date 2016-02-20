@@ -54,7 +54,7 @@ from six.moves import builtins
 
 __all__ = [
     'SAFE_BUILTINS', 'safe_eval', 'safe_exec', 'bind_all', 'make_constants',
-    'singleton_per_scope'
+    'singleton_per_scope', 'getcodeobj'
 ]
 
 
@@ -261,25 +261,11 @@ def _make_constants(func, builtin_only=False, stoplist=None, verbose=None):
 
     if changed:
 
-        if PY3:
-            codestr = bytes(newcode)
+        codeobj = getcodeobj(newconsts, newcode, fcode, fcode)
 
-        else:
-            codestr = reduce(lambda x, y: x + y, (chr(b) for b in newcode))
-
-        vargs = [
-            fcode.co_argcount, fcode.co_nlocals, fcode.co_stacksize,
-            fcode.co_flags, codestr, tuple(newconsts), fcode.co_names,
-            fcode.co_varnames, fcode.co_filename, fcode.co_name,
-            fcode.co_firstlineno, fcode.co_lnotab, fcode.co_freevars,
-            fcode.co_cellvars
-        ]
-        if PY3:
-            vargs.insert(1, fcode.co_kwonlyargcount)
-
-        codeobj = type(fcode)(*vargs)
         result = type(func)(
-            codeobj, func.__globals__, func.__name__, func.__defaults__, func.__closure__
+            codeobj,
+            func.__globals__, func.__name__, func.__defaults__, func.__closure__
         )
 
         # set func attributes to result
@@ -292,6 +278,40 @@ def _make_constants(func, builtin_only=False, stoplist=None, verbose=None):
                 setattr(result, prop, attr)
 
     return result
+
+
+def getcodeobj(consts, intcode, newcodeobj, oldcodeobj):
+    """Get code object from decompiled code.
+
+    :param list consts: constants to add in the result.
+    :param list intcode: list of byte code to use.
+    :param newcodeobj: new code object with empty body.
+    :param oldcodeobj: old code object.
+    :return: new code object to produce."""
+
+    # get code string
+    if PY3:
+        codestr = bytes(intcode)
+
+    else:
+        codestr = reduce(lambda x, y: x + y, (chr(b) for b in intcode))
+
+    # get vargs
+    vargs = [
+        newcodeobj.co_argcount, newcodeobj.co_nlocals, newcodeobj.co_stacksize,
+        newcodeobj.co_flags, codestr, tuple(consts), newcodeobj.co_names,
+        newcodeobj.co_varnames, newcodeobj.co_filename, newcodeobj.co_name,
+        newcodeobj.co_firstlineno, newcodeobj.co_lnotab,
+        oldcodeobj.co_freevars, newcodeobj.co_cellvars
+    ]
+    if PY3:
+        vargs.insert(1, newcodeobj.co_kwonlyargcount)
+
+    # instanciate a new newcodeobj object
+    result = type(newcodeobj)(*vargs)
+
+    return result
+
 
 _make_constants = _make_constants(_make_constants)  # optimize thyself!
 

@@ -58,9 +58,8 @@ from six import (
     string_types
 )
 
-from builtins import bytes
-
 from .path import lookup
+from .runtime import getcodeobj
 
 # consts for interception loading
 LOAD_GLOBAL = opmap['LOAD_GLOBAL']
@@ -319,23 +318,7 @@ def _compilecode(function, name, impl, args, varargs, kwargs):
                 newcode[index + 2] = pos >> 8
         index += 1
 
-    # get code string
-    codestr = bytes(newcode)
-
-    # get vargs
-    vargs = [
-        newco.co_argcount, newco.co_nlocals, newco.co_stacksize,
-        newco.co_flags, codestr, tuple(newconsts), newco.co_names,
-        newco.co_varnames, newco.co_filename, newco.co_name,
-        newco.co_firstlineno, newco.co_lnotab,
-        get_function_code(function).co_freevars,
-        newco.co_cellvars
-    ]
-    if PY3:
-        vargs.insert(1, newco.co_kwonlyargcount)
-
-    # instanciate a new code object
-    codeobj = type(newco)(*vargs)
+    codeobj = getcodeobj(newconsts, newcode, newco, get_function_code(function))
     # instanciate a new function
     if function is None or isbuiltin(function):
         result = FunctionType(codeobj, {})

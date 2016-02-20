@@ -38,7 +38,7 @@ from random import random
 
 from six import string_types
 
-from collections import OrderedDict
+from ..version import OrderedDict
 
 
 class EnsureIterableTest(UTCase):

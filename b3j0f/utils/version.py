@@ -40,7 +40,7 @@ __all__ = [
     '__version__',  # lib version
     'PY3', 'PY2', 'PY26', 'PY27',  # python versions
     'PYPY', 'CPYTHON', 'JYTHON', 'IRONPYTHON',  # python runtime types
-    'getcallargs',  # python2.7 objects
+    'OrderedDict', 'getcallargs',  # python2.7 objects
 ]
 
 # Store the version here so:
@@ -67,6 +67,8 @@ if PY26:
     # add functions and classes which come from
     from inspect import getargspec, ismethod
     from sys import getdefaultencoding
+
+    from ordereddict import OrderedDict
 
     # add definition of getcallargs
     def getcallargs(func, *positional, **named):

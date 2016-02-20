@@ -33,8 +33,7 @@ from .iterable import ensureiterable
 from inspect import isclass, isroutine, ismethod, getmodule
 
 from six import PY2, get_method_self, get_method_function
-
-from builtins import range
+from six.moves import range
 
 __all__ = ['base_elts', 'find_embedding', 'is_inherited']
 

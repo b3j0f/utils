@@ -175,8 +175,9 @@ def lookup(path, cache=True, scope=None, safe=False):
                     except ImportError:
                         # path sub-module content
                         try:
-                            if PY26:  # when __import__ is used
-                                index = 1  # restart count of pathing
+#                            if PY26:  # when __import__ is used
+#                                index = 1  # restart count of pathing
+
                             while index < components_len:
                                 result = getattr(result, components[index])
                                 index += 1
@@ -187,12 +188,14 @@ def lookup(path, cache=True, scope=None, safe=False):
                                     path, components[:index]
                                 )
                             )
-                    else:  # in case of PY26
-                        if PY26:
+#                    else:  # in case of PY26
+                        """if PY26:
                             index = 1
+                            print(components, result)
                             while index < components_len:
                                 result = getattr(result, components[index])
                                 index += 1
+                        """
 
         else:
             found = True
