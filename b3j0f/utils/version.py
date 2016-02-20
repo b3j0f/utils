@@ -169,3 +169,4 @@ else:
 
     # add builtin objects from python2.7+
     from inspect import getcallargs
+    from collections import OrderedDict
