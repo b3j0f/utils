@@ -95,7 +95,7 @@ test
 Iterable
 --------
 
->>> from b3j0f.utils.iterable import is_iterable, first, last, itemat, sliceit
+>>> from b3j0f.utils.iterable import is_iterable, first, last, itemat, sliceit, hashiter
 >>> is_iterable(1)
 False
 >>> is_iterable('aze')
@@ -122,6 +122,9 @@ False
 
 >>> sliceit(od, -2, -1)
 ['3']
+
+>>> hashiter([1, 2])
+8
 
 Path
 ----

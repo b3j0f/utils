@@ -380,6 +380,7 @@ class HashIterTest(UTCase):
 
         self.assertEqual(
             result,
+            hash(list) +
             (hash('test') + 1) * 1 +
             (hash(1) + 1) * 2 + (hashiter([]) + 1) * 3
         )
@@ -393,6 +394,7 @@ class HashIterTest(UTCase):
 
         self.assertEqual(
             result,
+            hash(set) +
             (hash(1) + 1) * 1 + (hash(2) + 1) * 2 + (hash(3) + 1) * 3
         )
 
@@ -405,6 +407,7 @@ class HashIterTest(UTCase):
 
         self.assertEqual(
             result,
+            hash(dict) +
             (hash('test0') + 1) * (hash(0) + 1) +
             (hash('test1') + 1) * (hash(1) + 1)
         )

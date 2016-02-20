@@ -253,6 +253,8 @@ def hashiter(iterable):
 
     Hash method on not iterable depends on type:
 
+    hash(iterable.__class__) + ...
+
         - dict: sum of (hash(key) + 1) * (hash(value) + 1).
         - Otherwise: sum of (pos + 1) * (hash(item) + 1)."""
 
@@ -262,6 +264,8 @@ def hashiter(iterable):
         result = hash(iterable)
 
     except TypeError:
+
+        result = hash(iterable.__class__)
 
         isdict = isinstance(iterable, dict)
 
