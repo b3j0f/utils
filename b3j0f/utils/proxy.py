@@ -38,8 +38,6 @@ __all__ = [
 
 from time import time
 
-from functools import wraps
-
 from types import MethodType, FunctionType
 
 from opcode import opmap
@@ -55,7 +53,7 @@ from inspect import (
 from six import (
     get_function_closure, get_function_code, get_function_defaults,
     get_function_globals, get_method_function, get_method_self, exec_, PY2, PY3,
-    string_types
+    string_types, wraps
 )
 
 from .path import lookup
