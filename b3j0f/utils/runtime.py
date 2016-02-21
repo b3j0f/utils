@@ -38,8 +38,7 @@ Modifications:
     avoid to update globals.
 - Modify verbose argument which is None or use a function with one argument
     which can be bound to a print function or a logging function.
-- Set attributes from originary function such as __dict__, __module__, etc.
-"""
+- Set attributes from originary function such as __dict__, __module__, etc."""
 
 from opcode import opmap, HAVE_ARGUMENT, EXTENDED_ARG
 
@@ -86,8 +85,7 @@ def singleton_per_scope(_cls, _scope=None, _renew=False, *args, **kwargs):
 def _safebuiltins():
     """Construct a safe builtin environment without I/O functions.
 
-    :rtype: dict
-    """
+    :rtype: dict"""
 
     result = {}
 
@@ -111,8 +109,7 @@ def _safe_processing(nsafefn, source, _globals=None, _locals=None):
     :param source: source object to process with fn.
     :param dict _globals: global objects by name.
     :param dict _locals: local objects by name.
-    :return: fn processing result
-    """
+    :return: fn processing result"""
 
     if _globals is None:
         _globals = SAFE_BUILTINS
@@ -155,8 +152,7 @@ def _make_constants(func, builtin_only=False, stoplist=None, verbose=None):
     :param function verbose: logger function which takes in parameter a message
 
     .. warning::
-        Be sure global attributes to transform are not resolved dynamically.
-    """
+        Be sure global attributes to transform are not resolved dynamically."""
 
     result = func
 

@@ -103,7 +103,7 @@ True
 >>> is_iterable('aze', exclude=str)
 False
 
->>> from collections import OrderedDict
+>>> from b3j0f.utils.version import OrderedDict
 >>> od = OrderedDict((('1', 2), ('3', 4), ('5', 6)))
 >>> first(od)
 '1'
