@@ -27,10 +27,53 @@
 
 from unittest import main
 
-from b3j0f.utils.ut import UTCase
-from b3j0f.utils.reflect import base_elts, find_embedding
+from ..ut import UTCase
+from ..reflect import base_elts, find_embedding, isoldstyle
+from ..version import PY3
 
 from inspect import getmodule
+
+
+class IsOldStyle(UTCase):
+    """Test the function isoldstyle."""
+
+    def test_true_simple(self):
+        """Test true."""
+
+        class Test:
+            """Test class."""
+            pass
+
+        self.assertTrue(PY3 or isoldstyle(Test))
+
+    def test_true_multi(self):
+        """Test true multi."""
+
+        class Test:
+            pass
+
+        class SubTest(Test):
+            pass
+
+        self.assertTrue(PY3 or isoldstyle(SubTest))
+
+    def test_false_simple(self):
+        """Test false."""
+        class Test(object):
+            pass
+
+        self.assertFalse(isoldstyle(Test))
+
+    def test_false_multi(self):
+        """Test false multi."""
+
+        class Test(object):
+            pass
+
+        class SubTest(Test):
+            pass
+
+        self.assertFalse(isoldstyle(Test))
 
 
 class BaseEltsTest(UTCase):

@@ -30,12 +30,19 @@ from __future__ import unicode_literals, absolute_import
 
 from .iterable import ensureiterable
 
-from inspect import isclass, isroutine, ismethod, getmodule
+from inspect import isclass, isroutine, ismethod, getmodule, getmro
 
 from six import PY2, get_method_self, get_method_function
 from six.moves import range
 
-__all__ = ['base_elts', 'find_embedding', 'is_inherited']
+__all__ = ['isoldstyle', 'base_elts', 'find_embedding', 'is_inherited']
+
+
+def isoldstyle(cls):
+    """Return True if cls is an old style class (does not inherits from object
+    in python2."""
+
+    return getmro(cls)[-1] is not object
 
 
 def base_elts(elt, cls=None, depth=None):

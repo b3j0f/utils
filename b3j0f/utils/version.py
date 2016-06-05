@@ -25,8 +25,7 @@
 # --------------------------------------------------------------------
 
 """Module which provides variables and constants in order to ease developments
-among several python versions and platforms.
-"""
+among several python versions and platforms."""
 
 from __future__ import unicode_literals
 
@@ -50,7 +49,7 @@ __all__ = [
 # thanks to https://github.com/pycontribs/jira/blob/master/jira/version.py
 
 #: project version
-__version__ = '1.4.2'
+__version__ = '1.4.3'
 
 
 PY26 = PY2 and version_info[1] == 6  #: python2.6.

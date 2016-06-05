@@ -208,8 +208,8 @@ open does not exist
 Version
 -------
 
->>> from b3j0f.utils.version import getargspec
->>> # getargspec is same function from python>2.7 for python2.6
+>>> from b3j0f.utils.version import getcallargs
+>>> # getcallargs is same function from python>2.7 for python2.6
 >>> from b3j0f.utils.version import PY3, PY2, PY26, PY27
 >>> # PY3 is True if python version is 3, etc.
 
