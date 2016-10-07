@@ -1,6 +1,11 @@
 ChangeLog
 =========
 
+1.4.4 (2016/10/07)
+------------------
+
+- fix error while looking up a library which is named like a keyword.
+
 1.4.3 (2016/06/05)
 ------------------
 

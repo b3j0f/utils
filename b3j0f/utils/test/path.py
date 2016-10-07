@@ -109,6 +109,10 @@ class LookUpTest(UTCase):
 
         self.assertRaises(ImportError, lookup, 'unexist')
 
+    def test_syntaxerror(self):
+
+        self.assertRaises(ImportError, lookup, 'not')
+
     def test_cache(self):
         """
         Test lookup cache

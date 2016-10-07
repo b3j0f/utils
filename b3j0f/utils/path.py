@@ -132,7 +132,7 @@ def lookup(path, cache=True, scope=None, safe=False):
         try:  # search among scope
             result = _eval(path, scope)
 
-        except NameError:
+        except (NameError, SyntaxError):
 
             # we generate a result in order to accept the result such as a None
             generated_result = random()

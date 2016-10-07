@@ -142,5 +142,8 @@ class UTCase(TestCase):
         def assertItemsEqual(self, actual, expected, msg=None):
             return self.assertEqual(sorted(actual), sorted(expected), msg=msg)
 
+        def assertCountEqual(self, actual, expected, msg=None):
+            return self.assertEqual(sorted(actual), sorted(expected), msg=msg)
+
         def assertDictContainsSubset(self, expected, actual, msg=None):
             return self.assertTrue(_subset(expected, actual), msg=msg)
